@@ -1,0 +1,73 @@
+1. unhosted architecture, libraries, advice
+2. dropbox, oauth, cookies. still not sure if autologin will work.
+3. demo of dropbox: okay, at least I can connect to it.
+4. data structures for queues. refresher on JS / ES6 updates
+5. start a journal
+6. responsive / flexbox studies
+7. start using jquery. consider jquery UI for animation but --  later
+8. visualize list items
+9. copy CSS / structure from an online example so I don't have to figure out design
+10. get 'add more' button working
+11. get status changes / CSS in
+12. get delete button working (copying template more) - sets to cancelled or clears out
+13. edit button: sets to contenteditable; put text into a div
+14. add an 'editing' state and adjust how things visualize
+15. support clicking in/out of editing boxes and enter presses
+16. add age strings (1h, 1w, etc)
+17. change everything to divs + figure out how to get them to flow correctly
+18. add selection, two clicks = check off (for mobile, mainly)
+19. animate selection borders / fix so they don't reflow anything
+20. add hints for how selection works
+21. use html5 templates instead of constructing everything in JS
+22.	make editing buttons look better -- cover 100% of vertical size with line-height
+23. check button on elements
+24. got dragging working -- after some pain. had to use globals.
+25. create a drag clone to hold position; when drag is released move to that position.
+26. added X to trash items; changed drop event to fire on whole document.
+26. attach reference to underlying data to Dom nodes
+27. priorities update to 'fit in' with neighbors when dragged (+ blink a bit), plus update on underlying data
+[weeklong absence]
+28. arrow keys change selection
+29. update priorities in 1s; propagate them on the list.
+30. design decisions:
+	should double clicking edit? or clicking and holding? should double clicking change status?
+	clicking and holding has to start dragging, so that can't do anything else.
+	so maybe doubleclick = edit. single click = check?
+	for cancelled items, no checkmark, just a 'return to active' button?
+	* clicking should toggle completion
+	* swiping should delete (on mobile) 
+	* holding should toggle editing/selection (separate from dragging)
+31. hold to edit. click once to toggle.
+32: bug: tries to set as editing after clicks on little buttons. (problem: mousedown vs mouseup vs click)
+33: bug: enter on edit box also checks/uncecks (problem: keypress vs keydown, stoppropagation vs preventdefault)
+
+todo:
+2. give lists a name
+3. save lists into file
+
+
+UI:
+	better way to highlight finished vs in progress vs deleted
+	hold to edit. double click to edit?
+	enter on selection = commits
+	double click to edit text or priority
+	let add elements at the top or between two other elements
+	right-align priorities
+	be able to open other lists
+	save current list
+	delete current list
+	add ? button to explain things
+	move lis to use flexbox
+	add link to my blog / explanation
+
+	?? age vs due date? (priority = proxy for due date?)
+
+DBX:
+	load file list from dropbox; display as list of options
+	load title of file as name of todo list
+	load contents of file.
+		error parsing -- if user modifies file?
+	help menu: explain dropbox integration / select integration
+	help menu: explain dropbox file format, in case user modifies anything?
+	save contents back to file
+	create new list (saves as file)
