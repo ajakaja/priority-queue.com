@@ -40,18 +40,20 @@
 31. hold to edit. click once to toggle.
 32: bug: tries to set as editing after clicks on little buttons. (problem: mousedown vs mouseup vs click)
 33: bug: enter on edit box also checks/uncecks (problem: keypress vs keydown, stoppropagation vs preventdefault)
-
-todo:
-2. give lists a name
-3. save lists into file
-
+[weeklong absence]
+34: added title to list display, double click to edit; enter to submit.
+35. bug -- edit button stopped working because e.preventDefault() was removed. wasted >1hr before that looking badly for it, when it was simple. (Found via deleting most of the code, but it was obvious in hindsight.)
+36. added 'Edited' flag, for determining when to save, and set to automatically save every 2s if anything changes.
+37. serialize data into text file format
+38. deserialize data (with lots of regex + capture groups) into list item formats
+39. add 'age' field [3h] using human readable form, deserialize into dates
+40. loading/saving from Dropbox (testing with direct access token)
+41. auth with Oauth2; client ID; token returned in redirect URI
+42. modal window for going to dropbox (auto-redirect is confusing and annoying)
 
 UI:
 	better way to highlight finished vs in progress vs deleted
-	hold to edit. double click to edit?
-	enter on selection = commits
-	double click to edit text or priority
-	let add elements at the top or between two other elements
+	let add elements at the top or between two other elements?
 	right-align priorities
 	be able to open other lists
 	save current list
@@ -61,13 +63,19 @@ UI:
 	add link to my blog / explanation
 
 	?? age vs due date? (priority = proxy for due date?)
+	what should age be 'relative' to? last edited? or something else? -- pretty unnatural
+		last updated: 8/21 // at the end of the file
+		[added 8/20] or something for ages
+		[due 8/25] or something for due dates
+		but, no more working on that until the dropbox part is implemented
 
 DBX:
-	load file list from dropbox; display as list of options
-	load title of file as name of todo list
 	load contents of file.
 		error parsing -- if user modifies file?
 	help menu: explain dropbox integration / select integration
 	help menu: explain dropbox file format, in case user modifies anything?
 	save contents back to file
 	create new list (saves as file)
+	unsaved / vs saved icon; button you can press (not saving while you're still editing / thinking / etc)
+	loading icon
+	logout icon

@@ -2,38 +2,38 @@ function error(error){
 	console.log(error);
 }
 
-function debugActive() { 
-	setTimeout(
-		() => { 
-		console.log(document.activeElement);
-		debugActive(); 
-	}, 2000); 
-};
-debugActive();
-
 const INCOMPLETE = "incomplete";
 const COMPLETE = "complete";
 const CANCELLED = "cancelled";
 
+const URL = "https://priority-queue.com";
+
 class ListItem {
-	constructor(text, priority, date, status) {
+	constructor(text, priority, date, status, comment = "") {
 		this.text = text;
 		this.priority = priority;
 		this.date = date;
 		this.status = status;
+		this.comment = comment;
 	}
 }
 
 class List {
-	constructor(title, elements) {
+	constructor(title, elements = [], filename, comments = []) {
 		this.title = title;
 		this.elements = elements;
+		this.filename = filename;
+		this.comments = comments; //at end of file
 	}
 }
 2
 const lists = [];
 let activeList = null;
 let dbx = null;
+let __edited = false;
+let lastEdit = null;
+let fs = null;
+let rendered = false;
 
 const hints = {
 	selection: true,
@@ -42,49 +42,104 @@ const hints = {
 }
 
 
-$(() => {
+async function init() {
 	if (!("content" in document.createElement("template"))) {
 		alert("your browser's too old for this. sorry.");
 		return;
 	}
-	initializeDropbox();
-	if (!dbx) {
-		alert("Dropbox could not be found. Sorry.");
-		return;
-	}
-	setupName();
-	renderList();
-	setupDrag();
-	setupHotkeys();
 	$(document).click((e) => {
+		if(e.target.closest(".modal")) {
+			$(".modal").hide();
+		}
 		//remove selections if we click outside the list
-		if(!e.target.closest("ul")) {
+		if(rendered && !e.target.closest("ul")) {
 			setAsEditing(null);
 			setSelection(null);
 		}
 	});
-});
+	fs = initializeDropbox();
+	if(!fs.isAuthed()) {
+		await initModal();
+	}
+	if (!fs.isLoaded()) {
+		console.log("Dropbox could not be found. Sorry.");
+		return;
+	}
+	let fileList = await fs.list();
+	console.log("files: " + fileList);
+	if(fileList.length == 0) {
+		await fs.create("To do", "todo.txt");
+	}
+	let [data, errors] = await fs.load(fileList[0]);
+	activeList = data;
+
+	renderList();
+	startSaving();
+};
+
+$(() => init() )
+
+function initModal() {
+	return new Promise((resolve, reject) => {
+		let $modal = $("#modal");
+		$modal.toggle();
+		$("#modal-connect").click((e) => {
+			fs.auth()
+				.then($modal.toggle)
+				.then(resolve, reject);
+		});
+	});
+}
+
+function setEditedFlag() {
+	if(!__edited) {
+		console.log("edited flipped from false to true");
+	} else {
+		console.log("edited set to true again");
+	}
+	__edited = true;
+	lastEdit = Date.now();
+}
+
+function startSaving() {
+	window.setInterval(() => {
+		let now = Date.now();
+		if(__edited && now - lastEdit > 2000) {
+			__edited = false;
+			fs.save(activeList);
+		}
+	}, 1000);
+}
+
+const NEWTEXT = "new task...";
 
 function renderList() {
+	setupName();
+
 	const $ul = $("#activelist");
 	const $addButton = $("#additem")
 		.click(() => {
 			let lastPriority;
 			if(activeList.elements.length != 0) {
-				lastPriority = activeList.elements[activeList.elements.length-1].priority+1; 
+				lastPriority = Number.parseInt(activeList.elements[activeList.elements.length-1].priority)+1; 
 			} else {
 				lastPriority = 1;
 			}
-			const li = new ListItem("new task...", lastPriority, new Date(), INCOMPLETE)
+			const li = new ListItem(NEWTEXT, lastPriority, new Date(), INCOMPLETE)
 			activeList.elements.push(li);
 			let $li = toHtml(li);
 			$addButton.before($li);
+			setEditedFlag();
 			setAsEditing($li);
 		});
 
 	activeList.elements.forEach( (li) => {
 		$addButton.before(toHtml(li));
 	});
+	setupDrag();
+	setupHotkeys();
+
+	rendered = true;
 }
 
 function setupName() {
@@ -103,8 +158,18 @@ function setupName() {
 				window.getSelection().removeAllRanges();
 				$name.removeClass("editing");
 				$name.attr("contenteditable", "false");
+				setEditedFlag();
+				activeList.title = $name.text();
 			}
 		}
+	});
+	const $settings = $("#settings");
+	$settings.click((e) => {
+		fs.logout();
+	}).hover(() => {
+	 	$settings.addClass("hover");
+	}, () => {
+		$settings.removeClass("hover");
 	});
 }
 
@@ -116,14 +181,17 @@ function toHtml(item) {
 	const $clone = $(document.importNode(template.content, true));
 	let $li = $clone.find("li.pqitem");
 	$li.data("item", item);
-	$li.find("div.pqtext")
-		.text(item.text)
+	$text = $li.find("div.pqtext");
+	$text.text(item.text)
 		.keydown((e) => {
 			if(e.which == 13) {
 				e.preventDefault();
 				e.stopPropagation();
 				removeEditing($li);
 				window.getSelection().removeAllRanges();
+				if($li.next().is("#additem")) {
+					$("#additem").click();
+				}
 			}
 		});
 	$li.hover(() => {
@@ -136,7 +204,7 @@ function toHtml(item) {
 			let time = holdStart;
 			//if we hold for more than holdTime, set as editing.
 			window.setTimeout(() => {
-				if(holdStart == time) {
+				if(holdStart == time) { //if no one has changed holdStart
 					setAsEditing($li);
 				}
 			}, holdTime);
@@ -154,18 +222,21 @@ function toHtml(item) {
 					setStatus($li, COMPLETE);
 				} else if(item.status == COMPLETE) {
 					setStatus($li, INCOMPLETE);
+				} else if(item.status == CANCELLED) {
+					setStatus($li, INCOMPLETE);
 				}
 			}
 			holdStart = null;
 			e.preventDefault();
 		});
-	setStatus($li, item.status);
+	renderStatus($li, item.status, item.priority);
 	$li.find("div.pqdate")
 		.text(`(${getAgeString(item.date)})`);
 	$li.find("div.edit")
 		.mousedown((e) => {
 			setAsEditing($li);
 			e.stopPropagation();
+			e.preventDefault();
 		});
 	$li.find("div.close")
 		.mousedown((e) => {
@@ -288,8 +359,8 @@ function setupDrag() {
 		e.preventDefault();
 		let $target = $(e.originalEvent.target);
 		if($target.is($("div#trash"))) {
-			$dragging.remove();
 			$dragClone.remove();
+			remove($dragging);
 		} else if($dragClone) {
 			if($dragClone.parent().length > 0) {
 				$dragging.detach();
@@ -298,6 +369,7 @@ function setupDrag() {
 				const priority = getPriority($dragClone);
 				const oldPriority = getPriority($dragging);
 				if(oldPriority != priority) { //we're not back where we started
+					setEditedFlag();
 					setPriority($dragging, priority);
 					$dragging.addClass("highlight");
 
@@ -359,15 +431,17 @@ function setupHotkeys() {
 					setStatus($selection, COMPLETE);
 				} else if(status == COMPLETE) {
 					setStatus($selection, INCOMPLETE);
-				}
+				}		
 			}
 		} else if(e.which == 8) { //delete
 			if($selection.length != 0) {
-				let status = getStatus($selection);
-				if(status == INCOMPLETE) {
-					setStatus($selection, CANCELLED);
-				} else if(status == CANCELLED || status == COMPLETE) {
-					remove($selection);
+				if(!$selection.hasClass("editing")) {
+					let status = getStatus($selection);
+					if(status == INCOMPLETE) {
+						setStatus($selection, CANCELLED);
+					} else if(status == CANCELLED || status == COMPLETE) {
+						remove($selection);
+					}	
 				}
 			}
 		}
@@ -377,15 +451,23 @@ function setupHotkeys() {
 
 
 function setStatus($li, status) {
+	let item = $li.data("item");
+	if(item.status != status) {
+		setEditedFlag();
+		item.status = status;
+		renderStatus($li, status, item.priority);
+	}
+}
+
+function renderStatus($li, status, priority) {
 	[COMPLETE, INCOMPLETE, CANCELLED].forEach((i) => {
 		if(status != i) {
 			$li.removeClass(i);
 		}
 	});
 	$li.addClass(status);
-	let item = $li.data("item");
-	item.status = status;
-	renderPriority($li, item.priority, status);
+	renderPriority($li, priority, status);
+
 }
 
 function setAsEditing($li) {
@@ -395,22 +477,19 @@ function setAsEditing($li) {
 		setSelection($li);
 		$li.addClass("editing");
 		select($text.get()[0]);
-		$text.blur((e) => { //TODO: why is it blurring right after you press the edit button?
-			console.log("blurred:");
-			console.log(e);
-		});
-		$text.focus((e) => {
-			console.log("focused:");
-			console.log(e);
-		});
-		$text.focus();
 	}
 
 	const $ul = $("#activelist");
-	$ul.children("li").each( (i, e)=> {
+	$ul.children("li.pqitem").each( (i, e)=> {
 		$e = $(e)
 		if(!$e.is($li)) {
-			$div = $e.children(".pqtext");
+			let $div = $e.children(".pqtext");
+			let text = $div.text();
+			let item = $e.data("item");
+			if(item.text != text) {
+				setEditedFlag();
+				item.text = text;
+			}
 			$div.attr("contenteditable", "false");
 			$e.removeClass("editing");
 		}
@@ -428,9 +507,15 @@ function select(node) {
 }
 
 function removeEditing($li) {
-	$div = $li.children(".pqtext");
+	let $div = $li.children(".pqtext");
 	$li.removeClass("editing");
 	$div.attr("contenteditable", "false");
+	let item = $li.data("item");
+	let text = $div.text();
+	if(item.text != text) {
+		setEditedFlag();
+		item.text = text;
+	}
 }
 
 function setSelection($li) {
@@ -475,6 +560,7 @@ function setPriority($li, priority) {
 		let item = $li.data("item");
 		item.priority = priority;
 		renderPriority($li, priority, item.status);
+		setEditedFlag();
 	}
 }
 
@@ -501,14 +587,15 @@ function remove($li, item) {
 		$li.remove();
 	}, 200);
 	item.status = "";
+	setEditedFlag();
 }
 
-function getAgeString(date) {
+function getAgeString(date, fluent=true) { //fluent: whether to make it more human-readable
 	let diff = (Date.now() - date.getTime()) / 1000;
 	if(diff < 0)
-		return "??";
+		return fluent ? "??" : "0s";
 	if(diff < 5)
-		return "just now";
+		return fluent ? "just now" : `${Math.round(diff)}s`;
 	if(diff < 60)
 		return `${Math.round(diff)}s`;
 	if(diff < 60*60) 
@@ -522,4 +609,159 @@ function getAgeString(date) {
 	if(diff < 60*60*24*365*2)
 		return `${Math.round(diff/(60*60*24*30))}mo`;
 	return `${Math.round(diff/(60*60*24*365))}y`;
+}
+
+const DATE = /^([0-9]+)([a-z]+)$/;
+function getDateBefore(dateString, now) {
+	let [_, t, u] = dateString.match(DATE);
+	let factor = 0;
+	switch (u){
+		case "s":
+		factor = 1000;
+		break;
+		case "m":
+		factor = 1000*60;
+		break;
+		case "h":
+		factor = 1000*60*60;
+		break;
+		case "d":
+		factor = 1000*60*60*24;
+		break;
+		case "w":
+		factor = 1000*60*60*24*7;
+		break;
+		case "mo":
+		factor = 1000*60*60*24*30;
+		break;
+		case "y":
+		factor = 1000*60*60*24*365;
+		break;
+	}
+	let diff = factor * t;
+	return new Date(now - diff);
+}
+
+
+function serialize(list) {
+
+	function getAge(date) {
+		return getAgeString(date, false);
+	}
+
+	let ret = list.title + "\n";
+	for(let i = 0; i < list.elements.length; i++) {
+		let el = list.elements[i];
+		switch(el.status) {
+			case INCOMPLETE:
+			ret += `${el.priority}. ${el.text} [${getAge(el.date)}]`;
+			break;
+			case COMPLETE:
+			ret += `X ${el.priority}. ${el.text} [${getAge(el.date)}]`;
+			break;
+			case CANCELLED:
+			ret += `(${el.priority}. ${el.text} [${getAge(el.date)}])`;
+			break;
+		}
+		if(el.comment) {
+			ret += ` //${el.comment}\n`;
+		} else {
+			ret += "\n";
+		}
+	}
+	if(list.comments) {
+		ret += "\n";
+		for(let i = 0; i < list.comments.length; i++) {
+			let el = list.comments[i];
+			if(el.length > 0) {
+				ret += `// ${el}\n`;
+			} else {
+				ret += "\n";
+			}
+		}
+	}
+	return ret;
+}
+
+const PRIORITY = /([0-9]+)\./.source;
+const ITEM = /\s?(.+)/.source;
+const AGE = /\s?(?:\[([0-9]+[a-z]+)\])/.source; //something of the form [5h] or [14m]
+const COMMENT = /\s*(?:\/\/\s?(.*))?/.source;
+
+const TITLE = /^(.+)$/;
+const ENTRY_INCOMPLETE = new RegExp("^" + PRIORITY + ITEM + AGE + COMMENT + "$");
+const ENTRY_COMPLETE = new RegExp(/^X\s*/.source + PRIORITY + ITEM + AGE + COMMENT + "$");
+const ENTRY_CANCELLED = new RegExp(/^\(/.source + PRIORITY + ITEM + AGE + /\)/.source + COMMENT + "$");
+const COMMENT_LINE = /^\/\/\s?(.+)$/;
+const BLANK = /^\s*$/;
+
+function deserialize(text) {
+	let errors = [];
+	let data = new List();
+
+	let lines = text.split(/\n/);
+	if(lines.length == 0) {
+		errors.push("File is empty.");
+		return [null, errors];
+	}
+
+	let title = lines[0];
+	let firstLine = 1;
+
+	if(TITLE.test(title)) {
+		data.title = title.match(TITLE)[1];
+	} else if (BLANK.test(title)) {
+		errors.push(`Title is blank.`);
+	} else if (ENTRY.test(title)){
+		errors.push(`No title present -- first line is '${title}'.`)
+		firstLine = 0;
+	}
+
+	let firstComment = null;
+	let i = firstLine;
+	while(true) {
+		if(i >= lines.length) {
+			break;
+		}
+		let line = lines[i];
+		let entry = null;
+		let now = Date.now(); //TODO: this should be the last time the file was saved?
+		if(BLANK.test(line)) {
+		} else if (COMMENT_LINE.test(line)) {
+			firstComment = i;
+			let comment = line.match(COMMENT_LINE)[1];
+			data.comments.push(comment);
+		} else if(ENTRY_INCOMPLETE.test(line)) {
+			let [_, priority, text, age, comment] = line.match(ENTRY_INCOMPLETE);
+			entry = new ListItem(text, priority, getDateBefore(age, Date.now()), INCOMPLETE, comment);
+		} else if(ENTRY_COMPLETE.test(line)) {
+			let [_, priority, text, age, comment] = line.match(ENTRY_COMPLETE);
+			entry = new ListItem(text, priority, getDateBefore(age, Date.now()), COMPLETE, comment);
+		} else if(ENTRY_CANCELLED.test(line)) {
+			let [_, priority, text, age, comment] = line.match(ENTRY_CANCELLED);
+			entry = new ListItem(text, priority, getDateBefore(age, Date.now()), CANCELLED, comment);
+		} else {
+			errors.push(`Could not make sense of line #${i}: '${line}'.`);
+		}
+		if(entry) {
+			data.elements.push(entry);
+			if(firstComment) {
+				errors.push(`Line #${i} ('${line}') was an entry, but came after line #${firstComment}, which was a comment.`);
+			}
+		}
+		i++;
+	}
+
+	return [data, errors];
+}
+
+function setupTest() {
+	const li3 = new ListItem("support drag", 1, new Date(), INCOMPLETE);
+	const li4 = new ListItem("priorities", 2, new Date(), INCOMPLETE);
+	const li5 = new ListItem("multiple lists", 3, new Date(), INCOMPLETE);
+	const li6 = new ListItem("help menu", 5, new Date(2017, 9, 1), COMPLETE);
+	const li7 = new ListItem("dropbox integration", 10, new Date(2017, 8, 1), CANCELLED);
+	const list1 = new List("To-do", [li3, li4, li5, li6, li7], "test.txt", ["", "this is the format"]);
+	lists.push(list1);
+	activeList = list1;
 }
