@@ -78,14 +78,11 @@ async function init() {
 $(() => init() )
 
 function initModal() {
+	$("#modal").css("display", "grid");
+	$("#dropbox-auth").attr("href", fs.getAuthLink());
 	return new Promise((resolve, reject) => {
-		let $modal = $("#modal");
-		$modal.toggle();
-		$("#modal-connect").click((e) => {
-			fs.auth()
-				.then($modal.toggle)
-				.then(resolve, reject);
-		});
+		//never resolves
+		//TODO: click outside / cancel modal, don't log in, and work offline (?)
 	});
 }
 
@@ -102,7 +99,7 @@ function setEditedFlag() {
 function startSaving() {
 	window.setInterval(() => {
 		let now = Date.now();
-		if(__edited && now - lastEdit > 2000) {
+		if(__edited && now - lastEdit > 5000) {
 			__edited = false;
 			fs.save(activeList);
 		}

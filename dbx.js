@@ -23,23 +23,15 @@ function initializeDropbox() {
 	return {
 		isAuthed: () => { return authenticated; },
 		isLoaded: () => { return !!dbx; },
-		auth: async () => {
-			if(authenticated) {
-				return;
+		getAuthLink: () => {
+			let redirectUrl;
+			if(window.location.href.includes("localhost")) {
+				redirectUrl = "http://localhost:8080";
 			} else {
-				dbx = new Dropbox({ clientId: CLIENT_ID });
-				let redirectUrl;
-				if(window.location.href.includes("localhost")) {
-					redirectUrl = "http://localhost:8080";
-				} else {
-					redirectUrl = URL;
-				}
-				window.location = `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}`
-					+ `&response_type=token&redirect_uri=${redirectUrl}`;
+				redirectUrl = URL;
 			}
-			
-			console.log(await dbx.usersGetCurrentAccount());
-			console.log("Dropbox connected.");
+			return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}`
+				+ `&response_type=token&redirect_uri=${redirectUrl}`;
 		},
 		logout: async () => {
 			await dbx.authTokenRevoke();

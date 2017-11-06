@@ -54,6 +54,7 @@
 44. enter button adds repeated new entries, for fast listing
 45. set things as edited only if they change 
 46. remove cancelled state. it was pointless, i think. i can always add it back.
+47. better modal / Dropbox logo for logging in
 
 UI:
 	better way to highlight finished vs in progress vs deleted
