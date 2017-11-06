@@ -4,7 +4,6 @@ function error(error){
 
 const INCOMPLETE = "incomplete";
 const COMPLETE = "complete";
-const CANCELLED = "cancelled";
 
 const URL = "https://priority-queue.com";
 
@@ -37,7 +36,6 @@ let rendered = false;
 
 const hints = {
 	selection: true,
-	delete: true,
 	priority: true
 }
 
@@ -222,8 +220,6 @@ function toHtml(item) {
 					setStatus($li, COMPLETE);
 				} else if(item.status == COMPLETE) {
 					setStatus($li, INCOMPLETE);
-				} else if(item.status == CANCELLED) {
-					setStatus($li, INCOMPLETE);
 				}
 			}
 			holdStart = null;
@@ -240,15 +236,7 @@ function toHtml(item) {
 		});
 	$li.find("div.close")
 		.mousedown((e) => {
-			if(item.status == INCOMPLETE) {
-				setStatus($li, CANCELLED);
-				if(hints.delete) {
-					setHint("(✗ an item again to permanently erase it)");
-					hints.delete = false;
-				}
-			} else if(item.status == COMPLETE || item.status == CANCELLED) {
-				remove($li, item);
-			}
+			remove($li, item);
 			e.stopPropagation();
 		});
 	$li.find("div.check")
@@ -435,14 +423,7 @@ function setupHotkeys() {
 			}
 		} else if(e.which == 8) { //delete
 			if($selection.length != 0) {
-				if(!$selection.hasClass("editing")) {
-					let status = getStatus($selection);
-					if(status == INCOMPLETE) {
-						setStatus($selection, CANCELLED);
-					} else if(status == CANCELLED || status == COMPLETE) {
-						remove($selection);
-					}	
-				}
+				remove($selection);
 			}
 		}
 
@@ -460,14 +441,14 @@ function setStatus($li, status) {
 }
 
 function renderStatus($li, status, priority) {
-	[COMPLETE, INCOMPLETE, CANCELLED].forEach((i) => {
-		if(status != i) {
-			$li.removeClass(i);
-		}
-	});
-	$li.addClass(status);
+	if(status == COMPLETE) {
+		$li.removeClass(INCOMPLETE);
+		$li.addClass(COMPLETE);
+	} else if(status == INCOMPLETE) {
+		$li.removeClass(COMPLETE);
+		$li.addClass(INCOMPLETE);
+	}
 	renderPriority($li, priority, status);
-
 }
 
 function setAsEditing($li) {
@@ -567,8 +548,6 @@ function setPriority($li, priority) {
 function renderPriority($li, priority, status) {
 	if(status == COMPLETE) {
 		$li.find(".pqpriority").text("✔");
-	} else if(status == CANCELLED) {
-		$li.find(".pqpriority").text("✗");
 	} else {
 		$li.find(".pqpriority").text(priority);
 	}
@@ -659,9 +638,6 @@ function serialize(list) {
 			case COMPLETE:
 			ret += `X ${el.priority}. ${el.text} [${getAge(el.date)}]`;
 			break;
-			case CANCELLED:
-			ret += `(${el.priority}. ${el.text} [${getAge(el.date)}])`;
-			break;
 		}
 		if(el.comment) {
 			ret += ` //${el.comment}\n`;
@@ -691,7 +667,6 @@ const COMMENT = /\s*(?:\/\/\s?(.*))?/.source;
 const TITLE = /^(.+)$/;
 const ENTRY_INCOMPLETE = new RegExp("^" + PRIORITY + ITEM + AGE + COMMENT + "$");
 const ENTRY_COMPLETE = new RegExp(/^X\s*/.source + PRIORITY + ITEM + AGE + COMMENT + "$");
-const ENTRY_CANCELLED = new RegExp(/^\(/.source + PRIORITY + ITEM + AGE + /\)/.source + COMMENT + "$");
 const COMMENT_LINE = /^\/\/\s?(.+)$/;
 const BLANK = /^\s*$/;
 
@@ -737,9 +712,6 @@ function deserialize(text) {
 		} else if(ENTRY_COMPLETE.test(line)) {
 			let [_, priority, text, age, comment] = line.match(ENTRY_COMPLETE);
 			entry = new ListItem(text, priority, getDateBefore(age, Date.now()), COMPLETE, comment);
-		} else if(ENTRY_CANCELLED.test(line)) {
-			let [_, priority, text, age, comment] = line.match(ENTRY_CANCELLED);
-			entry = new ListItem(text, priority, getDateBefore(age, Date.now()), CANCELLED, comment);
 		} else {
 			errors.push(`Could not make sense of line #${i}: '${line}'.`);
 		}
@@ -760,7 +732,6 @@ function setupTest() {
 	const li4 = new ListItem("priorities", 2, new Date(), INCOMPLETE);
 	const li5 = new ListItem("multiple lists", 3, new Date(), INCOMPLETE);
 	const li6 = new ListItem("help menu", 5, new Date(2017, 9, 1), COMPLETE);
-	const li7 = new ListItem("dropbox integration", 10, new Date(2017, 8, 1), CANCELLED);
 	const list1 = new List("To-do", [li3, li4, li5, li6, li7], "test.txt", ["", "this is the format"]);
 	lists.push(list1);
 	activeList = list1;

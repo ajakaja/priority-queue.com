@@ -50,6 +50,10 @@
 40. loading/saving from Dropbox (testing with direct access token)
 41. auth with Oauth2; client ID; token returned in redirect URI
 42. modal window for going to dropbox (auto-redirect is confusing and annoying)
+43. bugs with delete + enter + priorities 
+44. enter button adds repeated new entries, for fast listing
+45. set things as edited only if they change 
+46. remove cancelled state. it was pointless, i think. i can always add it back.
 
 UI:
 	better way to highlight finished vs in progress vs deleted
@@ -61,6 +65,8 @@ UI:
 	add ? button to explain things
 	move lis to use flexbox
 	add link to my blog / explanation
+
+	TODO: and easy delete for 'new task...' entries?
 
 	?? age vs due date? (priority = proxy for due date?)
 	what should age be 'relative' to? last edited? or something else? -- pretty unnatural
