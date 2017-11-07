@@ -8,7 +8,7 @@ const COMPLETE = "complete";
 const URL = "https://priority-queue.com";
 
 class ListItem {
-	constructor(text, priority, date, status, comment = "") {
+	constructor(text, priority, date, status, comment = "", newfilename = null) {
 		this.text = text;
 		this.priority = priority;
 		this.date = date;
@@ -36,7 +36,8 @@ let rendered = false;
 
 const hints = {
 	selection: true,
-	priority: true
+	priority: true,
+	filename : true
 }
 
 
@@ -46,8 +47,8 @@ async function init() {
 		return;
 	}
 	$(document).click((e) => {
-		if(e.target.closest(".modal")) {
-			$(".modal").hide();
+		if(e.target.closest("#modal")) {
+			$("#modal").hide();
 		}
 		//remove selections if we click outside the list
 		if(rendered && !e.target.closest("ul")) {
@@ -88,9 +89,7 @@ function initModal() {
 
 function setEditedFlag() {
 	if(!__edited) {
-		console.log("edited flipped from false to true");
-	} else {
-		console.log("edited set to true again");
+		console.log("edited=true");
 	}
 	__edited = true;
 	lastEdit = Date.now();
@@ -139,13 +138,13 @@ function renderList() {
 
 function setupName() {
 	const $name = $("#listname");
-	$name.text(activeList.title);
+	const $filename = $("#filename");
+	renderName();
 	$name.dblclick(() => {
 		$name.attr("contenteditable", "true");
 		select($name.get()[0]);
 		$name.addClass("editing");
-	});
-	$name.keydown((e) => {
+	}).keydown((e) => {
 		if($name.hasClass("editing")) {
 			if(e.which == 13) { //Enter
 				e.preventDefault();
@@ -153,19 +152,73 @@ function setupName() {
 				window.getSelection().removeAllRanges();
 				$name.removeClass("editing");
 				$name.attr("contenteditable", "false");
-				setEditedFlag();
-				activeList.title = $name.text();
+				if($name.text() != activeList.title) {
+					setEditedFlag();
+					activeList.title = $name.text();
+				}
+			}
+		}
+	});
+	$filename.dblclick(() => {
+		$filename.attr("contenteditable", "true");
+		select($filename.get()[0]);
+		$filename.addClass("editing");
+	}).keydown((e) => {
+		if($filename.hasClass("editing")) {
+			if(e.which == 13) { //Enter
+				e.preventDefault();
+				e.stopPropagation();
+				window.getSelection().removeAllRanges();
+				$filename.removeClass("editing");
+				$filename.attr("contenteditable", "false");
+				if($filename.text() != activeList.filename) {
+					let filename = validFilename($filename.text());
+					if(!filename) {
+						$filename.text(activeList.filename);
+						setHint("filenames must be alphanumeric + .txt");
+						hints.filename = false;
+					} else {
+						setEditedFlag();
+						activeList.newfilename = filename;
+					}
+				}
 			}
 		}
 	});
 	const $settings = $("#settings");
 	$settings.click((e) => {
-		fs.logout();
+		logout();
+
 	}).hover(() => {
 	 	$settings.addClass("hover");
 	}, () => {
 		$settings.removeClass("hover");
 	});
+}
+
+const FILENAME = /^\w+\.txt$/;
+const PREFIX = /^\w+$/;
+function validFilename(filename) {
+	if(FILENAME.test(filename)) {
+		return filename;
+	} else if(PREFIX.test(filename)) {
+		return filename + ".txt";
+	}
+}
+
+function renderName() {
+	const $name = $("#listname");
+	$name.text(activeList.title);
+	if(activeList.filename) {
+		$("#filename").text(activeList.filename);
+	}
+}
+
+function logout() {
+	fs.logout();
+	activeList = new List();
+	renderList();
+	$("#modal").toggle();
 }
 
 const holdTime = 600;
@@ -419,7 +472,7 @@ function setupHotkeys() {
 				}		
 			}
 		} else if(e.which == 8) { //delete
-			if($selection.length != 0) {
+			if($selection.length != 0 && !$selection.hasClass("editing")) {
 				remove($selection);
 			}
 		}

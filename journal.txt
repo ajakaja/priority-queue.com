@@ -55,6 +55,8 @@
 45. set things as edited only if they change 
 46. remove cancelled state. it was pointless, i think. i can always add it back.
 47. better modal / Dropbox logo for logging in
+48. add filename display
+49. trash bug (can't move the list up cause the trash region is toggled / in the way / can't reflow while dragging?) (nevermind -- fixed with pointer-events: none)
 
 UI:
 	better way to highlight finished vs in progress vs deleted

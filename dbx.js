@@ -1,19 +1,33 @@
 function initializeDropbox() {
 	const CLIENT_ID = "oh0zj30oa52f1y3";
+	const COOKIE = "dropbox-token";
 
 	function getToken() {
+		if(token != null) {
+			return token;
+		}
 		let params = new URLSearchParams(window.location.hash.slice(1));
-		let token = params.get("access_token");
-		return token;
+		let ret = params.get("access_token");
+		if(!!ret) {
+			Cookies.set(COOKIE, ret);
+		}
+		return ret;
 	}
 
 	function isAuthenticated() {
+		if(token != null) {
+			return true;
+		}
 		return !!getToken();
 	}
 
 	let dbx;
 	let authenticated = false;
-	let token;
+	let token = null;
+	let cookie = Cookies.get(COOKIE);
+	if(cookie) {
+		token = cookie;
+	}
 	if(isAuthenticated()) {
 		token = getToken();
 		authenticated = true;
@@ -34,15 +48,26 @@ function initializeDropbox() {
 				+ `&response_type=token&redirect_uri=${redirectUrl}`;
 		},
 		logout: async () => {
+			Cookies.remove(COOKIE);
 			await dbx.authTokenRevoke();
-			if(window.location.href.includes("localhost")) {
-				redirectUrl = "http://localhost:8080";
-			} else {
-				redirectUrl = URL;
+			if(window.location.href.includes("access_token")) {
+				if(window.location.href.includes("localhost")) {
+					redirectUrl = "http://localhost:8080";
+				} else {
+					redirectUrl = URL;
+				}
+				window.location = redirectUrl;
 			}
-			window.location = redirectUrl;
 		},
 		save: async (data) => {
+			if(data.newfilename && data.filename) {
+				let oldfilename = data.filename;
+				data.filename = data.newfilename;
+				let response = await dbx.filesMove({
+					from_path: "/" + oldfilename,
+					to_path: "/" + data.filename,
+				});
+			}
 			let text = serialize(data);
 			if(!data.filename) {
 				throw "No filename";
@@ -62,9 +87,6 @@ function initializeDropbox() {
 			let response = await dbx.filesUpload({path: "/" + datafilename,
 				contents: text
 			});
-		},
-		rename: function(oldname, newname) {
-
 		},
 		load: async (filename) => {
 			let response = await dbx.filesDownload({path: "/" + filename});
@@ -90,6 +112,14 @@ function initializeDropbox() {
 				return e.name;
 			});
 			return entries;
+		},
+		test: async () => {
+			try {
+				let response = await dbx.usersGetCurrentAccount();
+				return true;
+			} catch (e) {
+				return false;
+			}
 		}
 	};
 }

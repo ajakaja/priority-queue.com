@@ -14,13 +14,13 @@
 	<script src="jquery-3.2.1.slim.js"></script>
 	<script src="pq.js"></script>
 	<script src="dbx.js"></script>
+	<script src="cookie.js"></script>
 </head>
 <body>
 	<div id="outer">
 		<div id="modal">
 			<div id="modal-content">
-				<div id="modal-dropbox"><span>We use a <strong>Dropbox</strong> folder for storage so that we don't have any control over your data.<br/><br/>
-				Connect your account (if that's alright):</span>
+				<div id="modal-dropbox"><span>Connect a <strong>Dropbox</strong> account:</span>
 				<a href="" id="dropbox-auth">
 					<img src="dropbox-icon.svg" id="dropbox-button" width="80px" height="80px"/>
 				</a>
@@ -36,6 +36,7 @@
 			<div id="listholder">
 				<div id="nameholder">
 					<div id="listname"></div>
+					<div id="filename"></div>
 					<div id="settings">☰</div>
 				</div>
 				<ul id="activelist">
