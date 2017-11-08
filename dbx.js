@@ -80,11 +80,10 @@ function initializeDropbox() {
 		delete: function(filename) {
 
 		},
-		create: async (title, filename) => {
-			let data = new List(title, [], filename);
+		create: async (data) => {
 			let text = serialize(data);
 			console.log(`creating new file called '${data.filename}'.`);
-			let response = await dbx.filesUpload({path: "/" + datafilename,
+			let response = await dbx.filesUpload({path: "/" + data.filename,
 				contents: text
 			});
 		},

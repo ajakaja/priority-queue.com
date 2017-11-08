@@ -35,6 +35,7 @@ let fs = null;
 let rendered = false;
 
 const hints = {
+	edit: true,
 	selection: true,
 	priority: true,
 	filename : true
@@ -66,14 +67,22 @@ async function init() {
 	}
 	let fileList = await fs.list();
 	console.log("files: " + fileList);
+	let newb = false;
 	if(fileList.length == 0) {
-		await fs.create("To do", "todo.txt");
+		let item = new ListItem("edit this, or add new items below", 1, new Date(), INCOMPLETE);
+		let data = new List("To do", [item], "todo.txt");
+		await fs.create(data);
+		fileList = [data.filename];
+		newb = true;
 	}
 	let [data, errors] = await fs.load(fileList[0]);
 	activeList = data;
-
 	renderList();
 	startSaving();
+	if(newb) {
+		setHint("click and hold to edit");
+		hints.edit = false;
+	}
 };
 
 $(() => init() )
