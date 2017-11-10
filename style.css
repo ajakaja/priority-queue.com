@@ -9,13 +9,6 @@ body {
 *:focus {
     outline: none;
 }
-#header {
-	margin: 2px;
-	height: 50px;
-}
-#footer {
-	height: 100px;
-}
 #outer {
 	height: 100%;
 	display: flex;
