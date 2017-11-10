@@ -162,26 +162,26 @@ body {
 	background-color: #999;
 }
 
-ul#files {
+#files {
 	list-style-type: none;
 	padding: 0px;
 	margin: 0px;
 }
-ul#files li.fileitem:nth-child(odd) {
+#files li.fileitem:nth-child(odd) {
 	background: #8cc063;
 }
-ul#files li.fileitem:nth-child(even) {
+#files li.fileitem:nth-child(even) {
 	background: #97a8b9;
 }
-ul#files li {
+#files li {
 	padding: 5px;
 	border: 2px solid transparent;
 	cursor: pointer;
 }
-ul#files li:hover {
+#files li:hover {
 	border-color: #666;
 }
-ul#activelist {
+#activelist {
 	padding: 0px;
 	margin: 0px;
   	list-style-type: none;
@@ -190,40 +190,70 @@ ul#activelist {
   	width: 100%;
 }
 
-ul#activelist li {
+#activelist li {
     position: relative;
     padding: 0px;
 	transition: 0.2s;
 	height: 2.5em;
 }
-ul#activelist li:not(.editing) {
+#activelist li:not(.editing) {
 	cursor: pointer;
 }
-ul#activelist li.editing {
-	cursor: text;
-}
-ul#activelist li div {
+
+#activelist li div {
 	line-height: 2.5em;
 }
-li.editing div.pqtext {
-	background: #ffb7b7;
-}
-ul#activelist li.pqitem:nth-child(odd) {
+#activelist li.pqitem:nth-child(odd) {
 	background: #eee;
 }
-ul#activelist li.pqitem:nth-child(even) {
+#activelist li.pqitem:nth-child(even) {
 	background: #f9f9f9;
 }
 
-li#additem:hover {
+#additem:hover {
 	background: #aaa;
 }
-li#additem {
+#additem {
 	background: #ccc;
 	text-align: center;
 }
-li div.pqpriority {
-	float: left;
+
+li.pqitem {
+	border-width: 0px;
+	overflow: hidden;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+}
+.pqitem.complete div.pqtext {
+	text-decoration: line-through;
+}
+.pqitem.selected {
+	box-shadow: inset 0 0 0 2px;
+	/*transparent borders cause gaps in the page when highlighting elements,
+	but adding borders on selection reflows the page.
+	this takes a bit more to render but is cleaner visually.*/
+}
+.pqitem.cancelled {
+	background: #666 !important;
+}
+.pqitem.cancelled div.pqtext {
+	text-decoration: line-through;
+}
+.pqitem.editing {
+	cursor: text;
+}
+.pqitem.editing div.pqtext {
+	opacity: 0.7;
+	background: #ffb7b7;
+}
+#activelist li.pqitem:nth-child(n):hover {
+	background: #999;
+	/* trumps the nth-child selector above */
+}
+
+div.pqpriority {
 	opacity: 0.5;
 	width: 23px;
 	padding: 0px 8px;
@@ -232,105 +262,74 @@ li div.pqpriority {
 div.pqdate {
 	opacity: 0.3;
 	right: 0px;
-	float: right;
 	text-align: right;
 	padding: 0px 8px;
+	min-width: 20px;
 }
-li div.pqtext {
-	float: left;
+div.pqtext {
 	padding-right: 5px;
 	padding-left: 2px;
+	flex: 1;
 }
 
-li.pqitem {
-	border-color: transparent;
-	border-width: 2px;
-	border-style: solid;
-	transition: border-color 0.3s;
-	overflow: hidden;
-}
-li.pqitem.complete div.pqtext {
-	text-decoration: line-through;
-}
-li.pqitem.selected {
-	border-color: black;
-	transition: border-color 0.0s;
-	border-width: 2px;
-}
-li.pqitem.cancelled {
-	background: #666 !important;
-}
-li.pqitem.cancelled div.pqtext {
-	text-decoration: line-through;
-}
-li.pqitem.editing div.pqtext {
-	opacity: 0.7;
-}
-ul#activelist li.pqitem:nth-child(n):hover {
-	background: #999;
-}
 div.edit {
 	padding: 0px 4px 0px 4px;
 	opacity: 0.0;
 	transition: opacity 0.5s;
-	float: right;
 	height: 100%;
 }
 div.close {
 	padding: 0px 4px 0px 4px;
 	opacity: 0.0;
 	transition: opacity 0.5s;
-	float: right;
 	height: 100%;
 }
 div.check {
 	padding: 0px 4px 0px 4px;
 	opacity: 0.0;
 	transition: opacity 0.5s;
-	float: right;
 	height: 100%;
 }
-li.hover:not(.selected) div.close {
+.pqitem.hover:not(.selected) div.close {
 	opacity: 0.5;
 	transition: opacity 0.5s;
 }
-li.hover:not(.selected) div.check {
+.pqitem.hover:not(.selected) div.check {
 	opacity: 0.5;
 	transition: opacity 0.5s;
 }
-li.selected div.close {
+.pqitem.hover:not(.selected) div.edit {
+	opacity: 0.5;
+	transition: opacity 0.5s;
+}
+.pqitem.selected div.close {
 	opacity: 0.5;
 }
-li.selected div.check {
+.pqitem.selected div.check {
 	opacity: 0.5;
 }
-li.selected div.edit {
+.pqitem.selected div.edit {
 	opacity: 0.5;
 }
-div.close:hover {
+.close:hover {
 	background: #d77;
 	opacity: 1.0;
 	color: #ccc;
 }
-div.check:hover {
+.check:hover {
 	background: #77d;
 	opacity: 1.0;
 	color: #ccc;
 }
-
-li.hover:not(.selected) div.edit {
-	opacity: 0.5;
-	transition: opacity 0.5s;
-}
-div.edit:hover {
+.edit:hover {
 	background: #7d7;
 	opacity: 1.0;
 	color: #ccc;
 }
-div.pqtext {
+.pqtext {
 	white-space: nowrap;
 }
-div#hint {
+#hint {
 	height: 2em;
 	width: 100%;
 	text-align: right;
@@ -346,8 +345,7 @@ div#hint {
 	50% {opacity: 0.5;}
 	100% {opacity: 0.0;}
 }
-
-li.dragging {
+.pqitem.dragging {
 	opacity: 0.5;
 }
 @keyframes blink {
@@ -357,10 +355,4 @@ li.dragging {
 }
 li.highlight.incomplete div.pqpriority {
   animation: blink 0.2s step-start 0s 2;
-}
-
-li.hiding {
-	opacity: 0.0;
-	transition: opacity 0.5s;
-	transition-timing-function: ease-out;
 }
