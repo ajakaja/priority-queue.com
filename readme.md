@@ -1,0 +1,1 @@
+It's a priority queue. To keep track of your priorities. Use it well.

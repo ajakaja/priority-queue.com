@@ -15,7 +15,7 @@ const SPACE = 32;
 class ListItem {
 	constructor(text, priority, date, status, comment = "", newfilename = null) {
 		this.text = text;
-		this.priority = priority;
+		this.priority = Number.parseInt(priority);
 		this.date = date;
 		this.status = status;
 		this.comment = comment;
@@ -40,6 +40,7 @@ let __edited = false;
 let lastEdit = null;
 let fs = null;
 var $ul;
+var $save;
 
 const hints = {
 	edit: true,
@@ -56,6 +57,7 @@ async function init() {
 		return;
 	}
 	$ul = $("#activelist");
+	$save = $("#save");
 	fs = initializeDropbox();
 	if(!fs.isAuthed()) {
 		await initModal();
@@ -105,6 +107,7 @@ function setEditedFlag() {
 	if(!__edited) {
 		console.log("edited=true");
 	}
+	$save.addClass("edited");
 	__edited = true;
 	lastEdit = Date.now();
 }
@@ -113,10 +116,15 @@ function startSaving() {
 	window.setInterval(() => {
 		let now = Date.now();
 		if(__edited && now - lastEdit > 5000) {
-			__edited = false;
-			fs.save(activeList);
+			save();
 		}
 	}, 1000);
+}
+
+function save() {
+	__edited = false;
+	fs.save(activeList);
+	$save.removeClass("edited");
 }
 
 const NEWTEXT = "new task...";
@@ -134,7 +142,6 @@ function setupList() {
 			activeList.elements.push(li);
 			let $li = toHtml(li);
 			$addButton.before($li);
-			setEditedFlag();
 			setAsEditing($li);
 		});
 
@@ -147,7 +154,9 @@ function setupList() {
 		if(!e.target.closest("ul")) {
 			setAsEditing(null);
 			setSelection(null);
-			$("#fileselector").css("display", "none");
+			if($("#fileselector").is(":visible")) {
+				$("#fileselector").css("display", "none");
+			}
 		}
 	});
 }
@@ -205,6 +214,9 @@ function setupTitleBar() {
 			}
 		}
 	});*/
+	$("#save").click((e) => {
+		save();
+	});
 
 	const $settings = $("#settings");
 	$settings.click((e) => {
@@ -474,10 +486,11 @@ function addDrag($li) {
 }
 
 function setupDrag() {
-	$("div#trash").on("dragenter", (e) => {
+	let $trash = $("#trash");
+	$trash.on("dragenter", (e) => {
 		e.preventDefault();
 		let $target = $(e.originalEvent.target);
-		if(!$target.is($("div#trash"))) {
+		if(!$target.is($("$trash"))) {
 			return;
 		}
 		$target.addClass("hover");
@@ -486,7 +499,7 @@ function setupDrag() {
 	}).on("dragleave", (e) => {
 		e.preventDefault();
 		let $target = $(e.originalEvent.target);
-		if(!$target.is($("div#trash"))) {
+		if(!$target.is($("$trash"))) {
 			return;
 		}
 		$target.removeClass("hover");
@@ -497,7 +510,7 @@ function setupDrag() {
 		.on("drop", (e) => {
 		e.preventDefault();
 		let $target = $(e.originalEvent.target);
-		if($target.is($("div#trash"))) {
+		if($target.is($trash)) {
 			$dragClone.remove();
 			remove($dragging);
 		} else if($dragClone) {
@@ -510,7 +523,7 @@ function setupDrag() {
 				if(oldPriority != priority) { //we're not back where we started
 					setEditedFlag();
 					setPriority($dragging, priority);
-					$dragging.addClass("highlight");
+					highlight($dragging);
 
 					let $prev = $dragging.prev("li.pqitem");
 					let prevPriority = priority;
@@ -518,7 +531,7 @@ function setupDrag() {
 					while($prev.length != 0 && getPriority($prev) == prevPriority) {
 						prevPriority--;
 						setPriority($prev, prevPriority);
-						$prev.addClass("highlight");
+						highlight($next);
 						$prev = $prev.prev("li.pqitem");
 					}
 					let nextPriority = priority;
@@ -526,21 +539,25 @@ function setupDrag() {
 					while($next.length != 0 && getPriority($next) == nextPriority) {
 						nextPriority++;
 						setPriority($next, nextPriority);
-						$next.addClass("highlight");
+						highlight($next);
 						$next = $next.next("li.pqitem");
 					}
 				}	
 			}
 			$dragging.removeClass("dragging");
 			$dragClone.remove();
-			window.setTimeout(() => {
-				$(".highlight").removeClass("highlight");
-			}, 1000);
 		}
 		$dragging = null;
 		$dragClone = null;
-		$("#trash").removeClass("shown").removeClass("hover");
+		$trash.removeClass("shown").removeClass("hover");
 	});
+}
+
+function highlight($el) {
+	$el.addClass("highlight");
+	window.setTimeout(() => {
+		$el.removeClass("highlight");
+	}, 1000);
 }
 
 function setupHotkeys() {
@@ -705,7 +722,7 @@ function setHint(text) {
 
 function getPriority($li) {
 	if($li === $dragClone) {
-		return $dragClone.find("div.pqpriority").text();
+		return Number.parseInt($dragClone.find("div.pqpriority").text());
 	}
 	return $li.data("item").priority;
 }
@@ -884,13 +901,13 @@ function deserialize(text) {
 		} else if (COMMENT_LINE.test(line)) {
 			firstComment = i;
 			let comment = line.match(COMMENT_LINE)[1];
-			data.comments.push(comment);
+			data.comments.push(comment).trim();
 		} else if(ENTRY_INCOMPLETE.test(line)) {
 			let [_, priority, text, age, comment] = line.match(ENTRY_INCOMPLETE);
-			entry = new ListItem(text, priority, getDateBefore(age, Date.now()), INCOMPLETE, comment);
+			entry = new ListItem(text.trim(), priority, getDateBefore(age, Date.now()), INCOMPLETE, comment);
 		} else if(ENTRY_COMPLETE.test(line)) {
 			let [_, priority, text, age, comment] = line.match(ENTRY_COMPLETE);
-			entry = new ListItem(text, priority, getDateBefore(age, Date.now()), COMPLETE, comment);
+			entry = new ListItem(text.trim(), priority, getDateBefore(age, Date.now()), COMPLETE, comment);
 		} else {
 			errors.push(`Could not make sense of line #${i}: '${line}'.`);
 		}
