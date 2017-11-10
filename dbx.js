@@ -6,10 +6,16 @@ function initializeDropbox() {
 		if(token != null) {
 			return token;
 		}
+		let cookie = Cookies.get(COOKIE);
+		if(cookie) {
+			window.history.replaceState({}, document.title, window.location.origin);
+			return cookie;
+		}
 		let params = new URLSearchParams(window.location.hash.slice(1));
 		let ret = params.get("access_token");
 		if(!!ret) {
 			Cookies.set(COOKIE, ret);
+			window.history.replaceState({}, document.title, window.location.origin);
 		}
 		return ret;
 	}
@@ -18,16 +24,14 @@ function initializeDropbox() {
 		if(token != null) {
 			return true;
 		}
+
 		return !!getToken();
 	}
 
 	let dbx;
 	let authenticated = false;
 	let token = null;
-	let cookie = Cookies.get(COOKIE);
-	if(cookie) {
-		token = cookie;
-	}
+
 	if(isAuthenticated()) {
 		token = getToken();
 		authenticated = true;

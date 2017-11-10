@@ -56,7 +56,15 @@
 46. remove cancelled state. it was pointless, i think. i can always add it back.
 47. better modal / Dropbox logo for logging in
 48. add filename display
-49. trash bug (can't move the list up cause the trash region is toggled / in the way / can't reflow while dragging?) (nevermind -- fixed with pointer-events: none)
+49. trash bug (can't move the list up cause the trash region is toggled / in the way / can't reflow while dragging?) (nevermind -- fixed with pointer-events: none) (but should just remove the whole thing)
+50. filled up my list with 25 to-dos. but really need more lists to reach 'usable in my life' status
+51. try to position better on mobile. things seem to mostly work on my phone. but no real deep testing yet.
+52. fixed up hotkeys / selection / etc to be almost pleasant to use (including scrolling selection)
+53. filename selection / creation of new files / things like that
+54. okay it's really all in the Git history now so I can probably stop doing this.
+TODO, though: 
+	- set up github -> SNS -> S3 uploader for deployment
+	- fix up file format: need to save completed items, figure out due dates, ages; actually test comments? add tutorial for new files
 
 UI:
 	better way to highlight finished vs in progress vs deleted

@@ -18,42 +18,43 @@
 	<script src="cookie.js"></script>
 </head>
 <body>
-	<div id="outer">
-		<div id="modal">
-			<div id="modal-content">
-				<div id="modal-dropbox"><span>Connect a <strong>Dropbox</strong> account:</span>
-				<a href="" id="dropbox-auth">
-					<img src="dropbox-icon.svg" id="dropbox-button" width="80px" height="80px"/>
-				</a>
-				</div>
+	<div id="modal">
+		<div id="modal-content">
+			<div id="modal-dropbox"><span>Connect a <strong>Dropbox</strong> account:</span>
+			<a href="" id="dropbox-auth">
+				<img src="dropbox-icon.svg" id="dropbox-button" width="80px" height="80px"/>
+			</a>
 			</div>
 		</div>
-		<div class="container">
-			<div id="listholder">
-				<div id="nameholder">
-					<div id="listname"></div>
-					<div id="filename"></div>
-					<div id="settings">☰</div>
-				</div>
-				<ul id="activelist">
-					<template id="rowtemplate">
-						<li class="pqitem" draggable="true">
-							<div class="pqpriority"></div>
-							<div class="pqtext"></div>
-							<div class="pqdate"></div>
-							<div class="close">✗</div>
-							<div class="edit">✎</div>
-							<div class="check">✔</div>
-						</li>
-					</template>
-					<li id="additem"><div>+</div></li>
+	</div>
+	<div class="container">
+		<div id="listholder">
+			<div id="nameholder">
+				<div id="listname"></div>
+				<div id="filename"></div>
+				<div id="settings">☰</div>
+			</div>
+			<div id="fileselector">
+				<ul id="files">
+					<li id="newfile">+</li>
 				</ul>
 			</div>
-			<div id="hint" ></div>
-			<div id="trashregion"><div id="trash">×</div></div>
+			<ul id="activelist">
+				<template id="rowtemplate">
+					<li class="pqitem" draggable="true">
+						<div class="pqpriority"></div>
+						<div class="pqtext"></div>
+						<div class="pqdate"></div>
+						<div class="close">✗</div>
+						<div class="edit">✎</div>
+						<div class="check">✔</div>
+					</li>
+				</template>
+				<li id="additem"><div>+</div></li>
+			</ul>
 		</div>
-		<div id="footer">
-		</div>
+		<div id="hint" ></div>
+		<div id="trashregion"><div id="trash">×</div></div>
 	</div>
 </body>
 </html>

@@ -32,12 +32,13 @@ class List {
 }
 2
 const lists = [];
+let filelist = null;
+let files = {};
 let activeList = null;
 let dbx = null;
 let __edited = false;
 let lastEdit = null;
 let fs = null;
-let rendered = false;
 var $ul;
 
 const hints = {
@@ -50,20 +51,11 @@ const hints = {
 
 async function init() {
 	if (!("content" in document.createElement("template"))) {
-		alert("your browser's too old for this. sorry.");
+		alert("your browser's too old for this. sorry. I made this for personal use"
+			+ " so I'm not really trying to make it work for everyone.");
 		return;
 	}
 	$ul = $("#activelist");
-	$(document).click((e) => {
-		if(e.target.closest("#modal")) {
-			$("#modal").hide();
-		}
-		//remove selections if we click outside the list
-		if(rendered && !e.target.closest("ul")) {
-			setAsEditing(null);
-			setSelection(null);
-		}
-	});
 	fs = initializeDropbox();
 	if(!fs.isAuthed()) {
 		await initModal();
@@ -72,8 +64,7 @@ async function init() {
 		console.log("Dropbox could not be found. Sorry.");
 		return;
 	}
-	let fileList = await fs.list();
-	console.log("files: " + fileList);
+	fileList = await fs.list();
 	let newb = false;
 	if(fileList.length == 0) {
 		let item = new ListItem("edit this, or add new items below", 1, new Date(), INCOMPLETE);
@@ -82,9 +73,12 @@ async function init() {
 		fileList = [data.filename];
 		newb = true;
 	}
-	let [data, errors] = await fs.load(fileList[0]);
+	let filename = fileList[0];
+	let [data, errors] = await fs.load(filename);
 	activeList = data;
-	renderList();
+	files[filename] = data;
+	setupTitleBar();
+	setupList();
 	startSaving();
 	if(newb) {
 		setHint("click and hold to edit");
@@ -95,7 +89,11 @@ async function init() {
 $(() => init() )
 
 function initModal() {
-	$("#modal").css("display", "grid");
+	$("#modal").css("display", "grid")
+		.click((e) => {
+			$("#modal").hide();
+			//TODO: do something.
+		});
 	$("#dropbox-auth").attr("href", fs.getAuthLink());
 	return new Promise((resolve, reject) => {
 		//never resolves
@@ -123,8 +121,7 @@ function startSaving() {
 
 const NEWTEXT = "new task...";
 
-function renderList() {
-	setupName();
+function setupList() {
 	const $addButton = $("#additem")
 		.click(() => {
 			let lastPriority;
@@ -141,16 +138,21 @@ function renderList() {
 			setAsEditing($li);
 		});
 
-	activeList.elements.forEach( (li) => {
-		$addButton.before(toHtml(li));
-	});
+	renderList();
 	setupDrag();
 	setupHotkeys();
 
-	rendered = true;
+	$("body").click((e) => {
+		//remove selections if we click outside the list
+		if(!e.target.closest("ul")) {
+			setAsEditing(null);
+			setSelection(null);
+			$("#fileselector").css("display", "none");
+		}
+	});
 }
 
-function setupName() {
+function setupTitleBar() {
 	const $name = $("#listname");
 	const $filename = $("#filename");
 	renderName();
@@ -173,7 +175,11 @@ function setupName() {
 			}
 		}
 	});
-	$filename.dblclick(() => {
+	$filename.click((e) => {
+		$("#fileselector").toggle();
+		e.stopPropagation();
+	});
+/*	.dblclick(() => {
 		$filename.attr("contenteditable", "true");
 		select($filename.get()[0]);
 		$filename.addClass("editing");
@@ -198,25 +204,106 @@ function setupName() {
 				}
 			}
 		}
-	});
+	});*/
+
 	const $settings = $("#settings");
 	$settings.click((e) => {
 		logout();
-
 	}).hover(() => {
 	 	$settings.addClass("hover");
 	}, () => {
 		$settings.removeClass("hover");
 	});
+
+	let $fileList = $("#files");
+	function createFileItem(i) {
+		return $li = $("<li/>", {
+			text: i,
+			class: "fileitem"
+		}).click((e) => {
+			openFile(i).then(() => {
+				console.log("loaded");
+			});
+			e.stopPropagation();
+			e.preventDefault();
+		});
+	}
+	for(let i of fileList) {
+		createFileItem(i)
+			.prependTo($fileList);
+	}
+	$("#newfile").click((e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		let $li = createFileItem("new file...");
+		$li.attr("contenteditable", "true")
+			.addClass("editing")
+			.insertBefore("#newfile")
+			.keydown((e) => {
+				if(e.which == ENTER) {
+					$li.attr("contenteditable", "false");
+					$li.removeClass("editing");
+					e.preventDefault();
+					e.stopPropagation();
+					window.getSelection().removeAllRanges();
+					let name = validFilename($li.text());
+					$li.text(name);
+					if(!!name) {
+						openFile(name, true).then(() => {
+							console.log("loaded");
+						});
+					} else {
+						setHint("filenames must be alphanumeric + .txt");
+						hints.filename = false;
+					}
+				}
+			});
+		select($li.get()[0]);
+	});
+}
+
+function unrenderList() {
+	$("li.pqitem").remove();
+}
+
+function renderList() {
+	let $addButton = $("#additem");
+	activeList.elements.forEach( (li) => {
+		$addButton.before(toHtml(li));
+	});
+}
+
+async function openFile(filename, create=false) {
+	let data, errors;
+	if(fileList.includes(filename)) {
+		if(files[filename]) {
+			data = files[filename];
+		} else {
+			[data, errors] = await fs.load(filename);
+		}
+	} else if(create) {
+		data = new List("title...", [], filename);
+		await fs.create(data);
+		fileList.push(filename);
+		files[filename] = data;
+	}
+	activeList = data;
+	unrenderList();
+	$("#fileselector").hide();
+	renderList();
+	renderName();
 }
 
 const FILENAME = /^\w+\.txt$/;
 const PREFIX = /^\w+$/;
+
 function validFilename(filename) {
 	if(FILENAME.test(filename)) {
 		return filename;
 	} else if(PREFIX.test(filename)) {
 		return filename + ".txt";
+	} else {
+		return false;
 	}
 }
 
