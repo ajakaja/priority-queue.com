@@ -4,8 +4,13 @@ function error(error){
 
 const INCOMPLETE = "incomplete";
 const COMPLETE = "complete";
-
 const URL = "https://priority-queue.com";
+const ENTER = 13;
+const DELETE = 8;
+const UP = 38;
+const DOWN = 40;
+const ESCAPE = 27;
+const SPACE = 32;
 
 class ListItem {
 	constructor(text, priority, date, status, comment = "", newfilename = null) {
@@ -33,6 +38,7 @@ let __edited = false;
 let lastEdit = null;
 let fs = null;
 let rendered = false;
+var $ul;
 
 const hints = {
 	edit: true,
@@ -47,6 +53,7 @@ async function init() {
 		alert("your browser's too old for this. sorry.");
 		return;
 	}
+	$ul = $("#activelist");
 	$(document).click((e) => {
 		if(e.target.closest("#modal")) {
 			$("#modal").hide();
@@ -118,8 +125,6 @@ const NEWTEXT = "new task...";
 
 function renderList() {
 	setupName();
-
-	const $ul = $("#activelist");
 	const $addButton = $("#additem")
 		.click(() => {
 			let lastPriority;
@@ -155,7 +160,7 @@ function setupName() {
 		$name.addClass("editing");
 	}).keydown((e) => {
 		if($name.hasClass("editing")) {
-			if(e.which == 13) { //Enter
+			if(e.which == ENTER) {
 				e.preventDefault();
 				e.stopPropagation();
 				window.getSelection().removeAllRanges();
@@ -174,7 +179,7 @@ function setupName() {
 		$filename.addClass("editing");
 	}).keydown((e) => {
 		if($filename.hasClass("editing")) {
-			if(e.which == 13) { //Enter
+			if(e.which == ENTER) {
 				e.preventDefault();
 				e.stopPropagation();
 				window.getSelection().removeAllRanges();
@@ -241,14 +246,12 @@ function toHtml(item) {
 	$text = $li.find("div.pqtext");
 	$text.text(item.text)
 		.keydown((e) => {
-			if(e.which == 13) {
+			if(e.which == ENTER) {
 				e.preventDefault();
 				e.stopPropagation();
 				removeEditing($li);
 				window.getSelection().removeAllRanges();
-				if($li.next().is("#additem")) {
-					$("#additem").click();
-				}
+				setSelection($li);
 			}
 		});
 	$li.hover(() => {
@@ -277,8 +280,10 @@ function toHtml(item) {
 					setAsEditing($li);
 				} else if(item.status == INCOMPLETE) {
 					setStatus($li, COMPLETE);
+					setSelection($li);
 				} else if(item.status == COMPLETE) {
 					setStatus($li, INCOMPLETE);
+					setSelection($li);
 				}
 			}
 			holdStart = null;
@@ -454,39 +459,66 @@ function setupDrag() {
 function setupHotkeys() {
 	$(document).keydown((e) => {
 		let $selection = $("li.selected");
-		let $ul = $("#activelist");
-		if(e.which == 38) { //up arrow
-			if($selection.length == 0) {
-				let $li = $ul.find("li.pqitem").last();
-				setSelection($li);
-			} else {
-				let $li = $selection.prev("li.pqitem");
-				setSelection($li);
-			}
-		} else if(e.which == 40) { //down arrow
-			if($selection.length == 0) {
-				let $li = $ul.find("li.pqitem").first();
-				setSelection($li);
-			} else {
-				let $li = $selection.next("li.pqitem");
-				setSelection($li);
-			}
-		} else if(e.which == 13) { //enter
-			if($selection.length != 0) {
-				let status = getStatus($selection);
-				if(status == INCOMPLETE) {
-					setStatus($selection, COMPLETE);
-				} else if(status == COMPLETE) {
-					setStatus($selection, INCOMPLETE);
-				}		
-			}
-		} else if(e.which == 8) { //delete
-			if($selection.length != 0 && !$selection.hasClass("editing")) {
-				remove($selection);
-			}
+		let $li;
+		switch (e.which) {
+			case UP:
+				if($selection.length == 0) {
+					$li = $ul.find("li.pqitem").last();
+				} else {
+					$li = $selection.prev("li.pqitem");
+				}
+				if($li.length) {
+					setSelection($li);
+				}
+				e.preventDefault();
+				break;
+			case DOWN:
+				if($selection.length == 0) {
+					$li = $ul.find("li.pqitem").first();
+				} else {
+					$li = $selection.next("li.pqitem");
+				}
+				if($li.length) {
+					setSelection($li);
+				}
+				e.preventDefault();
+				break;
+			case ENTER:
+				if($selection.length != 0) {
+					let status = getStatus($selection);
+					if(status == INCOMPLETE) {
+						setStatus($selection, COMPLETE);
+					} else if(status == COMPLETE) {
+						setStatus($selection, INCOMPLETE);
+					}		
+				}
+				break;
+			case DELETE:
+				if($selection.length != 0 && !$selection.hasClass("editing")) {
+					remove($selection);
+				}
+				break;
+			case ESCAPE:
+				if($selection.length != 0) {
+					if($selection.hasClass("editing")) {
+						if(getText($selection) == NEWTEXT) {
+							remove($selection);
+						} else {
+							$selection.removeClass("editing");
+						}
+					} else {
+						remove($selection);
+					}
+				}
+				break;
 		}
-
 	});
+}
+
+function isOffscreen($li) {
+	let rect = $li[0].getBoundingClientRect();
+	let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+	return (rect.bottom < 0 || rect.top - viewHeight >= 0);
 }
 
 
@@ -519,7 +551,6 @@ function setAsEditing($li) {
 		select($text.get()[0]);
 	}
 
-	const $ul = $("#activelist");
 	$ul.children("li.pqitem").each( (i, e)=> {
 		$e = $(e)
 		if(!$e.is($li)) {
@@ -560,9 +591,11 @@ function removeEditing($li) {
 
 function setSelection($li) {
 	if($li) {
-		$li.toggleClass("selected");
+		$li.addClass("selected");
+		if(isOffscreen($li)) {
+			$li[0].scrollIntoView(false);
+		}
 	}
-	const $ul = $("#activelist");	
 	$ul.children("li").each( (i, e) => {
 		$e = $(e);
 		if(!$e.is($li)) {
