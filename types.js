@@ -36,12 +36,13 @@ function cycle(...fns) {
 
 
 class ListItem {
-	constructor(text, priority, date, status, comment = "", newfilename = null) {
+	constructor(text, priority, date, status, lastmodified = null, comment = null, newfilename = null) {
 		this.text = text;
 		this.priority = Number.parseInt(priority);
 		this.date = date;
 		this.status = status;
 		this.comment = comment;
+		this.lastmodified= lastmodified;
 	}
 }
 
@@ -75,6 +76,6 @@ function isOffscreen($el) {
 
 function sampleData(filename="todo.txt") {
 	let item = new ListItem("edit this, or add new items below", 1, new Date(), INCOMPLETE);
-	let data = new List("To do", [item], "todo.txt");
+	let data = new List("To do", [item], "todo.txt", new Date());
 	return data;
 };

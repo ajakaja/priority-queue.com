@@ -20,7 +20,7 @@ function getAgeString(date, fluent=true) { //fluent: whether to make it more hum
 }
 
 const DATE = /^([0-9]+)([a-z]+)$/;
-function getDateBefore(dateString, now) {
+function getDateBefore(dateString, lastmodified) {
 	let [_, t, u] = dateString.match(DATE);
 	let factor = 0;
 	switch (u){
@@ -47,12 +47,11 @@ function getDateBefore(dateString, now) {
 		break;
 	}
 	let diff = factor * t;
-	return new Date(now - diff);
+	return new Date(lastmodified.getTime() - diff);
 }
 
 
 function serialize(list) {
-
 	function getAge(date) {
 		return getAgeString(date, false);
 	}
@@ -99,7 +98,7 @@ const ENTRY_COMPLETE = new RegExp(/^X\s*/.source + PRIORITY + ITEM + AGE + COMME
 const COMMENT_LINE = /^\/\/\s?(.+)$/;
 const BLANK = /^\s*$/;
 
-function deserialize(text) {
+function deserialize(text, lastmodified) {
 	let errors = [];
 	let data = new List();
 
@@ -129,7 +128,6 @@ function deserialize(text) {
 		}
 		let line = lines[i];
 		let entry = null;
-		let now = Date.now(); //TODO: this should be the last time the file was saved?
 		if(BLANK.test(line)) {
 		} else if (COMMENT_LINE.test(line)) {
 			firstComment = i;
@@ -137,10 +135,10 @@ function deserialize(text) {
 			data.comments.push(comment).trim();
 		} else if(ENTRY_INCOMPLETE.test(line)) {
 			let [_, priority, text, age, comment] = line.match(ENTRY_INCOMPLETE);
-			entry = new ListItem(text.trim(), priority, getDateBefore(age, Date.now()), INCOMPLETE, comment);
+			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), INCOMPLETE, comment);
 		} else if(ENTRY_COMPLETE.test(line)) {
 			let [_, priority, text, age, comment] = line.match(ENTRY_COMPLETE);
-			entry = new ListItem(text.trim(), priority, getDateBefore(age, Date.now()), COMPLETE, comment);
+			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), COMPLETE, comment);
 		} else {
 			errors.push(`Could not make sense of line #${i}: '${line}'.`);
 		}

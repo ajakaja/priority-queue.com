@@ -1,5 +1,6 @@
 "use strict";
 
+const LAST_OPEN_COOKIE = "last-open";
 const lists = [];
 let fileList = null;
 const files = {};
@@ -34,7 +35,14 @@ async function init() {
 		fileList = [data.filename];
 		newb = true;
 	}
-	let filename = fileList[0];
+	let lastOpen = Cookies.get(LAST_OPEN_COOKIE)
+	let filename;
+	if(lastOpen && fileList.includes(lastOpen)) {
+		filename = lastOpen;
+	} else {
+		filename = fileList[0];
+		Cookies.set(LAST_OPEN_COOKIE, filename);
+	}
 	let [data, errors] = await fs.load(filename);
 	activeList = data;
 	files[filename] = data;
@@ -66,6 +74,7 @@ function startSaving() {
 
 function save() {
 	__edited = false;
+	activeList.lastmodified = new Date();
 	fs.save(activeList);
 	view.setEdited(false);
 	view.setHint("saved");
@@ -80,7 +89,7 @@ async function openFile(filename, create=false) {
 			[data, errors] = await fs.load(filename);
 		}
 	} else if(create) {
-		data =  new List("title", [], filename);
+		data =  new List("title", [], filename, new Date());
 		await fs.create(data);
 		fileList.push(filename);
 		files[filename] = data;
@@ -89,6 +98,7 @@ async function openFile(filename, create=false) {
 		activeList = data;
 		view.render();
 	}
+	Cookies.set(LAST_OPEN_COOKIE, filename);
 }
 
 function logout() {

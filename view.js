@@ -150,6 +150,7 @@ function initView() {
 						} else {
 							setHint("filenames must be alphanumeric + .txt");
 						}
+						$fileselector.hide();
 					}
 				});
 			select($li.get()[0]);

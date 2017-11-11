@@ -2,13 +2,13 @@
 
 function initializeDropbox() {
 	const CLIENT_ID = "oh0zj30oa52f1y3";
-	const COOKIE = "dropbox-token";
+	const TOKEN_COOKIE = "dropbox-token";
 
 	function getToken() {
 		if(token != null) {
 			return token;
 		}
-		let cookie = Cookies.get(COOKIE);
+		let cookie = Cookies.get(TOKEN_COOKIE);
 		if(cookie) {
 			window.history.replaceState({}, document.title, window.location.origin);
 			return cookie;
@@ -16,7 +16,7 @@ function initializeDropbox() {
 		let params = new URLSearchParams(window.location.hash.slice(1));
 		let ret = params.get("access_token");
 		if(!!ret) {
-			Cookies.set(COOKIE, ret);
+			Cookies.set(TOKEN_COOKIE, ret);
 			window.history.replaceState({}, document.title, window.location.origin);
 		}
 		return ret;
@@ -40,6 +40,11 @@ function initializeDropbox() {
 		dbx = new Dropbox({ accessToken: token });
 	}
 
+	function toISOwithoutMillis(date) {
+		const s = date.toISOString();
+		return s.substring(0, s.indexOf(".")) + "Z";
+	}
+
 	return {
 		isAuthed() { return authenticated; },
 		isLoaded() { return !!dbx; },
@@ -54,7 +59,7 @@ function initializeDropbox() {
 				+ `&response_type=token&redirect_uri=${redirectUrl}`;
 		},
 		async logout() {
-			Cookies.remove(COOKIE);
+			Cookies.remove(TOKEN_COOKIE);
 			authenticated = false;
 			token = null;
 			await dbx.authTokenRevoke();
@@ -83,6 +88,7 @@ function initializeDropbox() {
 			console.log("saving data in " + data.filename);
 			let response = await dbx.filesUpload({path: "/" + data.filename, 
 					contents: text, 
+					client_modified: toISOwithoutMillis(data.lastmodified),
 					mode: "overwrite"});
 		},
 		async delete(filename) {
@@ -92,7 +98,8 @@ function initializeDropbox() {
 			let text = serialize(data);
 			console.log(`creating new file called '${data.filename}'.`);
 			let response = await dbx.filesUpload({path: "/" + data.filename,
-				contents: text
+				contents: text,
+				client_modified: toISOwithoutMillis(data.lastmodified)
 			});
 		},
 		async load(filename) {
@@ -107,8 +114,11 @@ function initializeDropbox() {
 			});
 			reader.readAsText(blob);
 			let text = await promise;
-			let [data, errors] = deserialize(text);
+			let lastmodified = new Date(response["client_modified"]);
+			let [data, errors] = deserialize(text, lastmodified);
 			data.filename = filename;
+			data.lastmodified = lastmodified;
+			console.log(data);
 			return [data, errors];
 		},
 		async list() {
@@ -127,6 +137,9 @@ function initializeDropbox() {
 			} catch (e) {
 				return false;
 			}
+		},
+		leak() {
+			return dbx;
 		}
 	};
 }
