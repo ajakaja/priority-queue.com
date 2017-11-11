@@ -61,14 +61,7 @@ let lastEdit = null;
 let fs = null;
 var $ul;
 var $save;
-
-const hints = {
-	edit: true,
-	selection: true,
-	priority: true,
-	filename : true
-}
-
+var $loader;
 
 async function init() {
 	if (!("content" in document.createElement("template"))) {
@@ -78,14 +71,18 @@ async function init() {
 	}
 	$ul = $("#activelist");
 	$save = $("#save");
+	$loader = $("#loading");
 	fs = initializeDropbox();
+	initModal();
 	if(!fs.isAuthed()) {
-		await initModal();
-	}
-	if (!fs.isLoaded()) {
-		console.log("Dropbox could not be found. Sorry.");
+		$("#modal").show();
 		return;
 	}
+	if (!fs.isLoaded()) {
+		setHint("Could not log in. Sorry.");
+		return;
+	}
+	toggleLoader();
 	fileList = await fs.list();
 	let newb = false;
 	if(fileList.length == 0) {
@@ -102,26 +99,29 @@ async function init() {
 	setupTitleBar();
 	setupList();
 	startSaving();
+	toggleLoader();
 	if(newb) {
-		setHint("click and hold to edit");
-		hints.edit = false;
+		setHint("click and hold to edit", false);
 	}
 };
 
 $(() => init() )
 
 function initModal() {
-	$("#modal").css("display", "grid")
-		.click((e) => {
-			$("#modal").hide();
-			//TODO: do something.
-		});
 	$("#dropbox-auth").attr("href", fs.getAuthLink());
-	return new Promise((resolve, reject) => {
-		//never resolves
-		//TODO: click outside / cancel modal, don't log in, and work offline (?)
-	});
+	$("#modal").click((e) => {
+			$("#modal").hide();
+			setHint("you have to log in...");
+		});
 }
+
+let loader = function* loaderGenerator() {
+	while(true) {
+		yield $loader.css("display", "block");;
+		yield $loader.hide();;
+	}
+}();
+let toggleLoader = () => loader.next();
 
 function setEditedFlag() {
 	if(!__edited) {
@@ -226,7 +226,6 @@ function setupTitleBar() {
 					if(!filename) {
 						$filename.text(activeList.filename);
 						setHint("filenames must be alphanumeric + .txt");
-						hints.filename = false;
 					} else {
 						setEditedFlag();
 						activeList.newfilename = filename;
@@ -249,21 +248,20 @@ function setupTitleBar() {
 	});
 
 	let $fileList = $("#files");
-	function createFileItem(i) {
-		return $li = $("<li/>", {
-			text: i,
+	function createFileItem(item) {
+		let $li = $("<li/>", {
+			text: item,
 			class: "fileitem"
-		}).click((e) => {
-			openFile(i).then(() => {
-				console.log("loaded");
-			});
+		});
+		$li.click((e) => {
+			openFile($li.text());
 			e.stopPropagation();
 			e.preventDefault();
 		});
+		return $li;
 	}
 	for(let i of fileList) {
-		createFileItem(i)
-			.prependTo($fileList);
+		createFileItem(i).prependTo($fileList);
 	}
 	$("#newfile").click((e) => {
 		e.stopPropagation();
@@ -282,12 +280,9 @@ function setupTitleBar() {
 					let name = validFilename($li.text());
 					$li.text(name);
 					if(!!name) {
-						openFile(name, true).then(() => {
-							console.log("loaded");
-						});
+						openFile(name, true);
 					} else {
 						setHint("filenames must be alphanumeric + .txt");
-						hints.filename = false;
 					}
 				}
 			});
@@ -308,6 +303,7 @@ function renderList() {
 
 async function openFile(filename, create=false) {
 	let data, errors;
+	toggleLoader();
 	if(fileList.includes(filename)) {
 		if(files[filename]) {
 			data = files[filename];
@@ -325,6 +321,7 @@ async function openFile(filename, create=false) {
 	$("#fileselector").hide();
 	renderList();
 	renderName();
+	toggleLoader();
 }
 
 const FILENAME = /^\w+\.txt$/;
@@ -351,8 +348,8 @@ function renderName() {
 function logout() {
 	fs.logout();
 	activeList = new List();
-	renderList();
-	$("#modal").toggle();
+	unrenderList();
+	$("#modal").show();
 }
 
 const holdTime = 600;
@@ -389,8 +386,7 @@ function toHtml(item) {
 				}
 			}, holdTime);
 		 	if(hints.selection) {
-				setHint("(click and hold to edit)");
-				hints.selection = false;
+				setHint("(click and hold to edit)", false);
 			}
 		})
 		.mouseup((e) => {
@@ -412,26 +408,32 @@ function toHtml(item) {
 	renderStatus($li, item.status, item.priority);
 	$li.find("div.pqdate")
 		.text(`(${getAgeString(item.date)})`);
-	$li.find("div.edit")
-		.mousedown((e) => {
+	$li.find("div.edit").mousedown((e) => {
 			setAsEditing($li);
 			e.stopPropagation();
 			e.preventDefault();
 		});
-	$li.find("div.close")
-		.mousedown((e) => {
-			remove($li, item);
-			e.stopPropagation();
-		});
-	$li.find("div.check")
-		.mousedown((e) => {
-			if(item.status == INCOMPLETE) {
-				setStatus($li, COMPLETE);
-			} else if(item.status == COMPLETE) {
-				setStatus($li, INCOMPLETE);
-			}
-			e.stopPropagation();
-		});
+	$li.find("div.close").mousedown((e) => {
+		remove($li, item);
+		e.stopPropagation();
+	});
+	$li.find("div.check").mousedown((e) => {
+		if(item.status == INCOMPLETE) {
+			setStatus($li, COMPLETE);
+		} else if(item.status == COMPLETE) {
+			setStatus($li, INCOMPLETE);
+		}
+		e.stopPropagation();
+	});
+	$li.find("div.urgent").mousedown((e) => {
+		e.stopPropagation();
+		let $first = $("li.pqitem").first();
+		let priority = getPriority($first) - 1;
+		setPriority($li, priority);
+		$li.detach().insertBefore($first);
+		let item = $li.data("item");
+		activeList.elements.move(item, 0);
+	});
 	addDrag($li);
 	return $li;
 }
@@ -741,16 +743,22 @@ function setSelection($li) {
 	});
 }
 
-function setHint(text) {
+const hints = {};
+function setHint(text, repeat=true) {
 	const $hint = $("#hint");
-	//add a new element that copies the existing one, to reset the animation
-	//not sure if there's a better way...
-	$hint2 = $hint.clone(false);
-	$hint.after($hint2);
-	$hint.remove();
-	$hint2.text(text);
-	$hint2.css({"animation": "fadeout", 
-				"animation-duration": "4s"});
+	if(repeat || !hints[text]) {
+		//add a new element that copies the existing one, to reset the animation
+		//not sure if there's a better way...
+		$hint2 = $hint.clone(false);
+		$hint.after($hint2);
+		$hint.remove();
+		$hint2.text(text);
+		$hint2.css({"animation": "fadeout", 
+					"animation-duration": "4s"});
+	}
+	if(!repeat) {
+		hints[text] = true;
+	}
 }
 
 function getPriority($li) {

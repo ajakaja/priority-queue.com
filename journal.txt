@@ -69,12 +69,7 @@ TODO, though:
 UI:
 	better way to highlight finished vs in progress vs deleted
 	let add elements at the top or between two other elements?
-	right-align priorities
-	be able to open other lists
-	save current list
-	delete current list
 	add ? button to explain things
-	move lis to use flexbox
 	add link to my blog / explanation
 
 	TODO: and easy delete for 'new task...' entries?
@@ -87,12 +82,7 @@ UI:
 		but, no more working on that until the dropbox part is implemented
 
 DBX:
-	load contents of file.
-		error parsing -- if user modifies file?
 	help menu: explain dropbox integration / select integration
 	help menu: explain dropbox file format, in case user modifies anything?
-	save contents back to file
-	create new list (saves as file)
-	unsaved / vs saved icon; button you can press (not saving while you're still editing / thinking / etc)
 	loading icon
 	logout icon

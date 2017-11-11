@@ -27,7 +27,7 @@ body {
     background-color: rgba(0,0,0,0.4);
 }
 #modal-content {
-	margin: auto;
+	margin: 60px auto;
 	background-color: #acc;
     padding: 20px;
     border: 1px solid #888;
@@ -125,6 +125,38 @@ body {
 	width: 30px;
 	opacity: 0.5;
 }
+.loader,
+.loader:before,
+.loader:after {
+  animation: loader 1.8s infinite ease-in-out;
+  color: #ffffff;
+}
+.loader {
+	font-size: 2em;
+  	margin: auto;
+  	animation-delay: -0.16s;
+}
+.loader:before,
+.loader:after {
+  	content: '•';
+}
+.loader:before {
+  	animation-delay: -0.32s;
+}
+#loading {
+	display: none;
+}
+@keyframes loader {
+  0%,
+  80%,
+  100% {
+    opacity: 0.8;
+  }
+  40% {
+    opacity: 0.0;
+  }
+}
+
 #save {
 	margin-left: auto;
 	text-align: right;
@@ -272,23 +304,16 @@ div.pqtext {
 	flex: 1;
 }
 
-div.edit {
+div.edit,
+div.close,
+div.check,
+div.urgent {
 	padding: 0px 4px 0px 4px;
 	opacity: 0.0;
 	transition: opacity 0.5s;
-	height: 100%;
 }
-div.close {
-	padding: 0px 4px 0px 4px;
-	opacity: 0.0;
-	transition: opacity 0.5s;
-	height: 100%;
-}
-div.check {
-	padding: 0px 4px 0px 4px;
-	opacity: 0.0;
-	transition: opacity 0.5s;
-	height: 100%;
+div.urgent {
+	font-weight: bold;
 }
 .pqitem.hover:not(.selected) div.close {
 	opacity: 0.5;
@@ -302,6 +327,10 @@ div.check {
 	opacity: 0.5;
 	transition: opacity 0.5s;
 }
+.pqitem.hover:not(.selected) div.urgent {
+	opacity: 0.5;
+	transition: opacity 0.5s;
+}
 .pqitem.selected div.close {
 	opacity: 0.5;
 }
@@ -309,6 +338,9 @@ div.check {
 	opacity: 0.5;
 }
 .pqitem.selected div.edit {
+	opacity: 0.5;
+}
+.pqitem.selected div.urgent {
 	opacity: 0.5;
 }
 .close:hover {
@@ -323,6 +355,11 @@ div.check {
 }
 .edit:hover {
 	background: #7d7;
+	opacity: 1.0;
+	color: #ccc;
+}
+.urgent:hover {
+	background: #d77;
 	opacity: 1.0;
 	color: #ccc;
 }
