@@ -7,16 +7,7 @@ let activeList = null;
 let fs = null;
 let view;
 
-var $ul;
-var $save;
-var $loader;
-
-$(() => {
-	$ul = $("#activelist");
-	$save = $("#save");
-	$loader = $("#loading");
-	init()
-});
+$(() => init());
 
 async function init() {
 	if (!("content" in document.createElement("template"))) {

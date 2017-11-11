@@ -19,10 +19,12 @@ function initView() {
 	var $dragging = null;
 	var $dragClone = null;
 
+	const $ul = $("#activelist");
+	const $save = $("#save");
+	const $loader = $("#loading");
 	const $name = $("#listname");
 	const $filename = $("#filename");
 	const $addButton = $("#additem");
-	const $save = $("#save");
 	const $newfile = $("#newfile");
 	const $settings = $("#settings");
 	const $modal = $("#modal");
@@ -242,11 +244,13 @@ function initView() {
 		$li.find("div.urgent").mousedown((e) => {
 			e.stopPropagation();
 			let $first = $("li.pqitem").first();
-			let priority = getPriority($first) - 1;
-			setPriority($li, priority);
-			$li.detach().insertBefore($first);
-			let item = $li.data("item");
-			activeList.elements.move(item, 0);
+			if(!$li.is($first)) {
+				let priority = getPriority($first) - 1;
+				setPriority($li, priority);
+				$li.detach().insertBefore($first);
+				let item = $li.data("item");
+				activeList.elements.move(item, 0);
+			}
 		});
 		addDrag($li);
 		return $li;
@@ -478,7 +482,7 @@ function initView() {
 		}
 
 		$ul.children("li.pqitem").each( (i, e)=> {
-			$e = $(e)
+			let $e = $(e)
 			if(!$e.is($li)) {
 				let $div = $e.children(".pqtext");
 				let text = $div.text();
@@ -517,7 +521,7 @@ function initView() {
 		if(item.status != status) {
 			setEditedFlag();
 			item.status = status;
-			view.renderStatus($li, status, item.priority);
+			renderStatus($li, status, item.priority);
 		}
 	}
 	function removeEditing($li) {
@@ -552,7 +556,7 @@ function initView() {
 			}
 		}
 		$ul.children("li").each( (i, e) => {
-			$e = $(e);
+			let $e = $(e);
 			if(!$e.is($li)) {
 				$e.removeClass("selected");
 			}
@@ -597,7 +601,7 @@ function initView() {
 		if(repeat || !hints[text]) {
 			//add a new element that copies the existing one, to reset the animation
 			//not sure if there's a better way...
-			$hint2 = $hint.clone(false);
+			let $hint2 = $hint.clone(false);
 			$hint.after($hint2);
 			$hint.remove();
 			$hint2.text(text);

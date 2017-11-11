@@ -288,6 +288,9 @@ li.pqitem {
 	background: #999;
 	/* trumps the nth-child selector above */
 }
+li.pqitem:first-of-type div.urgent {
+	display: none;
+}
 
 div.pqpriority {
 	opacity: 0.5;
