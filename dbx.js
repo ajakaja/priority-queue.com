@@ -39,9 +39,9 @@ function initializeDropbox() {
 	}
 
 	return {
-		isAuthed: () => { return authenticated; },
-		isLoaded: () => { return !!dbx; },
-		getAuthLink: () => {
+		isAuthed() { return authenticated; },
+		isLoaded() { return !!dbx; },
+		getAuthLink() {
 			let redirectUrl;
 			if(window.location.href.includes("localhost")) {
 				redirectUrl = "http://localhost:8080";
@@ -51,7 +51,7 @@ function initializeDropbox() {
 			return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}`
 				+ `&response_type=token&redirect_uri=${redirectUrl}`;
 		},
-		logout: async () => {
+		async logout() {
 			Cookies.remove(COOKIE);
 			await dbx.authTokenRevoke();
 			if(window.location.href.includes("access_token")) {
@@ -63,7 +63,7 @@ function initializeDropbox() {
 				window.location = redirectUrl;
 			}
 		},
-		save: async (data) => {
+		async save(data) {
 			if(data.newfilename && data.filename) {
 				let oldfilename = data.filename;
 				data.filename = data.newfilename;
@@ -81,17 +81,17 @@ function initializeDropbox() {
 					contents: text, 
 					mode: "overwrite"});
 		},
-		delete: function(filename) {
+		delete(filename) {
 
 		},
-		create: async (data) => {
+		async create(data) {
 			let text = serialize(data);
 			console.log(`creating new file called '${data.filename}'.`);
 			let response = await dbx.filesUpload({path: "/" + data.filename,
 				contents: text
 			});
 		},
-		load: async (filename) => {
+		async load(filename) {
 			let response = await dbx.filesDownload({path: "/" + filename});
 			let blob = response.fileBlob;
 			var reader = new FileReader();
@@ -107,7 +107,7 @@ function initializeDropbox() {
 			data.filename = filename;
 			return [data, errors];
 		},
-		list: async () =>  {
+		async list() {
 			let response = await dbx.filesListFolder({path: ''});
 			let entries = response.entries.filter((e) => {
 				return e[".tag"] == "file";
@@ -116,7 +116,7 @@ function initializeDropbox() {
 			});
 			return entries;
 		},
-		test: async () => {
+		async test() {
 			try {
 				let response = await dbx.usersGetCurrentAccount();
 				return true;

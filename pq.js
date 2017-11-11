@@ -2,6 +2,26 @@ function error(error){
 	console.log(error);
 }
 
+Array.prototype.remove = function(item) {
+	if(this.length == 0) {
+		return null;
+	}
+	let i = this.indexOf(item);
+	if(i == -1) {
+		return null;
+	}
+	this.splice(i, 1);
+	return item;
+}
+
+Array.prototype.move = function(item, i) {
+	if(!this.remove(item)) {
+		return null;
+	}
+	this.splice(i, 0, item);
+	return this;
+}
+
 const INCOMPLETE = "incomplete";
 const COMPLETE = "complete";
 const URL = "https://priority-queue.com";
@@ -125,6 +145,7 @@ function save() {
 	__edited = false;
 	fs.save(activeList);
 	$save.removeClass("edited");
+	setHint("saved");
 }
 
 const NEWTEXT = "new task...";
@@ -423,7 +444,7 @@ function addDrag($li) {
 	$li.on("dragstart", (e) => {
 		let $target = $(e.target);
 		$target.addClass("dragging");
-		holdStart = null; //
+		holdStart = null;
 		$dragging = $li;
 		$dragClone = $li.clone();
 		let dt = e.originalEvent.dataTransfer;
@@ -431,15 +452,15 @@ function addDrag($li) {
 		dt.effectAllowed = "move";
 		dt.dropEffect = "move";
 		window.setTimeout(() => {
-			$("#trash").addClass("shown");
+			$("#trash").addClass("shown"); //can't reflow while dragging
 		}, 10);
 
 	}).on("dragend", (e) => {
 
 	}).on("dragover", (e) => {
 		e.preventDefault();
-		let $target = $(e.originalEvent.target);
-		if(!$target.is($("li.pqitem"))) {
+		let $target = $(e.originalEvent.target).closest("li.pqitem");
+		if(!$target.length) {
 			return;
 		}
 		if(!$target.is($dragging)) {
@@ -460,7 +481,7 @@ function addDrag($li) {
 	}).on("dragenter", (e) => {
 		e.preventDefault(); //have to prevent default to allow dropping.
 		//fired by the element we drag OVER
-		let $target = $(e.originalEvent.target);
+		let $target = $(e.originalEvent.target).closest("li.pqitem");
 		if(!$target.is($("li.pqitem"))) { //in case events fire from children
 			return;
 		}
@@ -518,6 +539,11 @@ function setupDrag() {
 				$dragging.detach();
 				$dragClone.before($dragging);
 				$dragClone.detach();
+
+				let index = $dragging.index() - 1; //Jquery index starts at 1
+				let item = $dragging.data("item");
+				activeList.elements.move(item, index);
+
 				const priority = getPriority($dragClone);
 				const oldPriority = getPriority($dragging);
 				if(oldPriority != priority) { //we're not back where we started
@@ -531,7 +557,7 @@ function setupDrag() {
 					while($prev.length != 0 && getPriority($prev) == prevPriority) {
 						prevPriority--;
 						setPriority($prev, prevPriority);
-						highlight($next);
+						highlight($prev);
 						$prev = $prev.prev("li.pqitem");
 					}
 					let nextPriority = priority;
@@ -616,6 +642,13 @@ function setupHotkeys() {
 				}
 				break;
 		}
+	});
+}
+
+function adjustPriorities(start) {
+	let $lis = $ul.children("li.pqitem");
+	$lis.each((i, li) => {
+		setPriority($(li), i+start);
 	});
 }
 
