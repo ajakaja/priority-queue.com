@@ -145,6 +145,10 @@ body {
 }
 #loading {
 	display: none;
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	pointer-events: none;
 }
 @keyframes loader {
   0%,

@@ -1,3 +1,5 @@
+"use strict";
+
 function initializeDropbox() {
 	const CLIENT_ID = "oh0zj30oa52f1y3";
 	const COOKIE = "dropbox-token";
@@ -53,6 +55,8 @@ function initializeDropbox() {
 		},
 		async logout() {
 			Cookies.remove(COOKIE);
+			authenticated = false;
+			token = null;
 			await dbx.authTokenRevoke();
 			if(window.location.href.includes("access_token")) {
 				if(window.location.href.includes("localhost")) {
@@ -81,8 +85,8 @@ function initializeDropbox() {
 					contents: text, 
 					mode: "overwrite"});
 		},
-		delete(filename) {
-
+		async delete(filename) {
+			throw "not yet implemented";
 		},
 		async create(data) {
 			let text = serialize(data);
