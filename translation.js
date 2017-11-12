@@ -57,20 +57,29 @@ function serialize(list) {
 	}
 
 	let ret = list.title + "\n";
-	for(let i = 0; i < list.elements.length; i++) {
-		let el = list.elements[i];
-		switch(el.status) {
-			case INCOMPLETE:
-			ret += `${el.priority}. ${el.text} [${getAge(el.date)}]`;
-			break;
-			case COMPLETE:
-			ret += `X ${el.priority}. ${el.text} [${getAge(el.date)}]`;
-			break;
+	list.elements.sort((a, b) => {
+		return a.priority - b.priority;
+	});
+	for(let el of list.elements) {
+		if(el.status == DELETED) {
+			continue;
 		}
-		if(el.comment) {
-			ret += ` //${el.comment}\n`;
+		if(!el.edited && el.cached) {
+			ret += el.cached + "\n";
 		} else {
-			ret += "\n";
+			switch(el.status) {
+				case INCOMPLETE:
+				ret += `${el.priority}. ${el.text} [${getAge(el.date)}]`;
+				break;
+				case COMPLETE:
+				ret += `X ${el.priority}. ${el.text} [${getAge(el.date)}]`;
+				break;
+			}
+			if(el.comment) {
+				ret += ` //${el.comment}\n`;
+			} else {
+				ret += "\n";
+			}
 		}
 	}
 	if(list.comments) {
@@ -143,6 +152,7 @@ function deserialize(text, lastmodified) {
 			errors.push(`Could not make sense of line #${i}: '${line}'.`);
 		}
 		if(entry) {
+			entry.cached = line;
 			data.elements.push(entry);
 			if(firstComment) {
 				errors.push(`Line #${i} ('${line}') was an entry, but came after line #${firstComment}, which was a comment.`);

@@ -3,23 +3,14 @@
 const URL = "https://priority-queue.com";
 const INCOMPLETE = "incomplete";
 const COMPLETE = "complete";
-
-Array.prototype.remove = function(item) {
-	if(this.length == 0) {
-		return null;
-	}
-	let i = this.indexOf(item);
-	if(i == -1) {
-		return null;
-	}
-	this.splice(i, 1);
-	return item;
-}
+const DELETED = "deleted";
 
 Array.prototype.move = function(item, i) {
-	if(!this.remove(item)) {
+	let index = this.indexOf(item);
+	if(index == -1) {
 		return null;
 	}
+	this.splice(index, 1);
 	this.splice(i, 0, item);
 	return this;
 }
@@ -34,24 +25,44 @@ function cycle(...fns) {
 	return () => gen.next();
 }
 
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
 
 class ListItem {
-	constructor(text, priority, date, status, lastmodified = null, comment = null, newfilename = null) {
+	constructor(text, priority, date, status, comment = null, edited=false) {
 		this.text = text;
 		this.priority = Number.parseInt(priority);
 		this.date = date;
 		this.status = status;
 		this.comment = comment;
-		this.lastmodified= lastmodified;
+		this.edited = edited;
 	}
 }
 
 class List {
-	constructor(title, elements = [], filename, comments = []) {
+	constructor(title, elements = [], filename, comments = [], lastmodified) {
 		this.title = title;
 		this.elements = elements;
 		this.filename = filename;
-		this.comments = comments; //at end of file
+		this.comments = comments;
+		this.deltas = [];
+		this.lastmodified = lastmodified;
+	}
+}
+
+//not exactly the memory-safe or elegantly immutable way to do things -- but should get the job done
+class Delta {
+	constructor(target, apply, undo) {
+		this.target = target;
+		this.apply = apply;
+		this.undo = undo;
+	}
+	apply(target) {
+		apply(target);
+	}
+	undo(target) {
+		undo(target);
 	}
 }
 

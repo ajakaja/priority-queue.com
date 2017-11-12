@@ -118,7 +118,6 @@ function initializeDropbox() {
 			let [data, errors] = deserialize(text, lastmodified);
 			data.filename = filename;
 			data.lastmodified = lastmodified;
-			console.log(data);
 			return [data, errors];
 		},
 		async list() {

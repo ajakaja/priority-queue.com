@@ -2,8 +2,8 @@
 
 const LAST_OPEN_COOKIE = "last-open";
 const lists = [];
-let fileList = null;
 const files = {};
+let fileList = null;
 let activeList = null;
 let fs = null;
 let view;
@@ -96,6 +96,7 @@ async function openFile(filename, create=false) {
 	}
 	if(activeList != data) {
 		activeList = data;
+		history = data.deltas.length;
 		view.render();
 	}
 	Cookies.set(LAST_OPEN_COOKIE, filename);
@@ -105,4 +106,38 @@ function logout() {
 	fs.logout();
 	activeList = null;
 	view.render(false);
+}
+
+let history = 0;
+
+function set(obj, key, value) {
+	let oldvalue = obj[key];
+	let delta = new Delta(obj, i => obj[key] = value, 
+			i => obj[key] = oldvalue);
+	if(history != activeList.deltas.length) {
+		activeList.deltas.splice(history);
+	}
+	history = activeList.deltas.push(delta);
+	delta.apply();
+	setEditedFlag();
+	if(obj.edited === false) {
+		obj.edited = true;
+	}
+}
+
+function undo() {
+	if(history == 0) {
+		return;
+	}
+	history--;
+	activeList.deltas[history].undo();
+	view.render();
+}
+function redo() {
+	if(history == activeList.deltas.length) {
+		return;
+	}
+	activeList.deltas[history].apply();
+	view.render();
+	history++;
 }

@@ -8,6 +8,7 @@ function initView() {
 	const DOWN = 40;
 	const ESCAPE = 27;
 	const SPACE = 32;
+	const Z = 90;
 
 	const hints = {};
 	const NEWTEXT = "new task...";
@@ -48,13 +49,16 @@ function initView() {
 		$addButton.click(() => {
 			let lastPriority;
 			if(activeList.elements.length != 0) {
-				lastPriority = Number.parseInt(activeList.elements[activeList.elements.length-1].priority)+1; 
+				let variance = randInt(1, 5);
+				lastPriority = Number.parseInt(activeList.elements[activeList.elements.length-1].priority)
+					+ variance; 
 			} else {
 				lastPriority = 1;
 			}
-			const li = new ListItem(NEWTEXT, lastPriority, new Date(), INCOMPLETE)
-			activeList.elements.push(li);
-			let $li = toHtml(li);
+			const item = new ListItem(NEWTEXT, lastPriority, new Date(), DELETED);
+			activeList.elements.push(item);
+			set(item, "status", INCOMPLETE);
+			let $li = toHtml(item);
 			$addButton.before($li);
 			setAsEditing($li);
 		});
@@ -88,8 +92,7 @@ function initView() {
 					$name.removeClass("editing");
 					$name.attr("contenteditable", "false");
 					if($name.text() != activeList.title) {
-						setEditedFlag();
-						activeList.title = $name.text();
+						set(activeList, "title", $name.text());
 					}
 				}
 			}
@@ -117,7 +120,8 @@ function initView() {
 							setHint("filenames must be alphanumeric + .txt");
 						} else {
 							setEditedFlag();
-							activeList.newfilename = filename;
+							set(activeList, "newfilename" filename);
+							activeList.filename = filename;
 						}
 					}
 				}
@@ -246,11 +250,9 @@ function initView() {
 			e.stopPropagation();
 			let $first = $("li.pqitem").first();
 			if(!$li.is($first)) {
-				let priority = getPriority($first) - 1;
+				let priority = getPriority($first) - randInt(1, 5);
 				setPriority($li, priority);
 				$li.detach().insertBefore($first);
-				let item = $li.data("item");
-				activeList.elements.move(item, 0);
 			}
 		});
 		addDrag($li);
@@ -358,12 +360,10 @@ function initView() {
 
 					let index = $dragging.index() - 1; //Jquery index starts at 1
 					let item = $dragging.data("item");
-					activeList.elements.move(item, index);
 
 					const priority = getPriority($dragClone);
 					const oldPriority = getPriority($dragging);
 					if(oldPriority != priority) { //we're not back where we started
-						setEditedFlag();
 						setPriority($dragging, priority);
 						highlight($dragging);
 
@@ -450,6 +450,16 @@ function initView() {
 						}
 					}
 					break;
+				case Z:
+					if(e.metaKey || e.ctrlKey) {
+						if(e.shiftKey) {
+							redo();
+						} else {
+							undo();
+						}
+						return false;
+					}
+					break;
 			}
 		});
 	}
@@ -489,8 +499,7 @@ function initView() {
 				let text = $div.text();
 				let item = $e.data("item");
 				if(item.text != text) {
-					setEditedFlag();
-					item.text = text;
+					set(item, "text", text);
 				}
 				$div.attr("contenteditable", "false");
 				$e.removeClass("editing");
@@ -520,8 +529,7 @@ function initView() {
 	function setStatus($li, status) {
 		let item = $li.data("item");
 		if(item.status != status) {
-			setEditedFlag();
-			item.status = status;
+			set(item, "status", status);
 			renderStatus($li, status, item.priority);
 		}
 	}
@@ -532,8 +540,7 @@ function initView() {
 		let item = $li.data("item");
 		let text = $div.text();
 		if(item.text != text) {
-			setEditedFlag();
-			item.text = text;
+			set(item, "text", text);
 		}
 	}
 	function highlight($el) {
@@ -578,9 +585,8 @@ function initView() {
 			return
 		} else {
 			let item = $li.data("item");
-			item.priority = priority;
+			set(item, "priority", priority);
 			renderPriority($li, priority, item.status);
-			setEditedFlag();
 		}
 	}
 	function getText($li) {
@@ -590,13 +596,8 @@ function initView() {
 		if(typeof item === 'undefined') {
 			item = $li.data("item");
 		}
-		activeList.elements = activeList.elements.filter(x => x !== item);
-		$li.addClass("hiding");
-		window.setTimeout(() => {
-			$li.remove();
-		}, 200);
-		item.status = "";
-		setEditedFlag();
+		set(item, "status", DELETED);
+		$li.detach();
 	}
 	function setHint(text, repeat=true) {
 		if(repeat || !hints[text]) {
