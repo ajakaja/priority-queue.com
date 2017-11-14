@@ -462,9 +462,11 @@ function initView() {
 
 	function renderList() {
 		unrender();
-		activeList.elements.forEach( (li) => {
-			$addButton.before(toHtml(li));
-		});
+		activeList.elements
+			.filter(e => e.status != ARCHIVED)
+			.forEach(li => {
+				$addButton.before(toHtml(li));
+			});
 	}
 	function renderName() {
 		$name.text(activeList.title);

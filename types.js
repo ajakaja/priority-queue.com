@@ -4,6 +4,7 @@ const URL = "https://priority-queue.com";
 const INCOMPLETE = "incomplete";
 const COMPLETE = "complete";
 const DELETED = "deleted";
+const ARCHIVED = "archived";
 
 Array.prototype.move = function(item, i) {
 	let index = this.indexOf(item);
@@ -39,24 +40,24 @@ function randInt(min, max) {
 }
 
 class ListItem {
-	constructor(text, priority, date, status, comment = null, edited=false) {
+	constructor(text, priority, date, status, edited=false) {
 		this.text = text;
 		this.priority = Number.parseInt(priority);
 		this.date = date;
 		this.status = status;
-		this.comment = comment;
 		this.edited = edited;
 	}
 }
 
 class List {
-	constructor(title, elements = [], filename, comments = [], lastmodified) {
+	constructor(title, elements = [], filename, lastmodified, archived=[]) {
 		this.title = title;
 		this.elements = elements;
 		this.filename = filename;
-		this.comments = comments;
-		this.deltas = [];
 		this.lastmodified = lastmodified;
+		this.newfilename = null;
+		this.deltas = [];
+		this.archived = archived;
 	}
 }
 

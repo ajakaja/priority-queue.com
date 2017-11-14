@@ -58,6 +58,15 @@ function serialize(list) {
 
 	let ret = list.title + "\n";
 	list.elements.sort((a, b) => {
+		if(a.status == ARCHIVED) {
+			if(b.status == ARCHIVED) {
+				return 0;
+			} else {
+				return 1;
+			}
+		} else if (b.status == ARCHIVED ){
+			return -1;
+		}
 		return a.priority - b.priority;
 	});
 	for(let el of list.elements) {
@@ -69,43 +78,37 @@ function serialize(list) {
 		} else {
 			switch(el.status) {
 				case INCOMPLETE:
-				ret += `${el.priority}. ${el.text} [${getAge(el.date)}]`;
+				ret += `${el.priority}. ${el.text} [${getAge(el.date)}]\n`;
 				break;
 				case COMPLETE:
-				ret += `X ${el.priority}. ${el.text} [${getAge(el.date)}]`;
+				ret += `X ${el.priority}. ${el.text} [${getAge(el.date)}]\n`;
 				break;
-			}
-			if(el.comment) {
-				ret += ` //${el.comment}\n`;
-			} else {
-				ret += "\n";
+				default:
+				break;
 			}
 		}
 	}
-	if(list.comments) {
-		ret += "\n";
-		for(let i = 0; i < list.comments.length; i++) {
-			let el = list.comments[i];
-			if(el.length > 0) {
-				ret += `// ${el}\n`;
-			} else {
-				ret += "\n";
-			}
-		}
+	let archived = list.elements.filter(e => e.status == ARCHIVED);
+	if(archived.length > 0) {
+		ret += "\nArchived:\n";
+	}
+	for(let el of archived) {
+		ret += `* ${el.text} [${getAge(el.date)}]\n`;
 	}
 	return ret;
 }
 
+const ARCHIVE_HEADER = /^Archived:$/;
+
 const PRIORITY = /([0-9]+)\./.source;
 const ITEM = /\s?(.+)/.source;
 const AGE = /\s?(?:\[([0-9]+[a-z]+)\])/.source; //something of the form [5h] or [14m]
-const COMMENT = /\s*(?:\/\/\s?(.*))?/.source;
 
 const TITLE = /^(.+)$/;
-const ENTRY_INCOMPLETE = new RegExp("^" + PRIORITY + ITEM + AGE + COMMENT + "$");
-const ENTRY_COMPLETE = new RegExp(/^X\s*/.source + PRIORITY + ITEM + AGE + COMMENT + "$");
-const COMMENT_LINE = /^\/\/\s?(.+)$/;
+const ENTRY_INCOMPLETE = new RegExp("^" + PRIORITY + ITEM + AGE + "$");
+const ENTRY_COMPLETE = new RegExp(/^X\s*/.source + PRIORITY + ITEM + AGE + "$");
 const BLANK = /^\s*$/;
+const ENTRY_ARCHIVE = new RegExp(/^\*\s/.source + ITEM + AGE + "$");
 
 function deserialize(text, lastmodified) {
 	let errors = [];
@@ -129,8 +132,8 @@ function deserialize(text, lastmodified) {
 		firstLine = 0;
 	}
 
-	let firstComment = null;
 	let i = firstLine;
+	let archive = false
 	while(true) {
 		if(i >= lines.length) {
 			break;
@@ -138,27 +141,45 @@ function deserialize(text, lastmodified) {
 		let line = lines[i];
 		let entry = null;
 		if(BLANK.test(line)) {
-		} else if (COMMENT_LINE.test(line)) {
-			firstComment = i;
-			let comment = line.match(COMMENT_LINE)[1];
-			data.comments.push(comment).trim();
-		} else if(ENTRY_INCOMPLETE.test(line)) {
-			let [_, priority, text, age, comment] = line.match(ENTRY_INCOMPLETE);
-			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), INCOMPLETE, comment);
+		} else if(ARCHIVE_HEADER.test(line)) {
+			archive = true;
+		}
+		else if(ENTRY_INCOMPLETE.test(line)) {
+			let [_, priority, text, age] = line.match(ENTRY_INCOMPLETE);
+			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), INCOMPLETE);
 		} else if(ENTRY_COMPLETE.test(line)) {
-			let [_, priority, text, age, comment] = line.match(ENTRY_COMPLETE);
-			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), COMPLETE, comment);
+			let [_, priority, text, age] = line.match(ENTRY_COMPLETE);
+			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), COMPLETE);
 		} else {
 			errors.push(`Could not make sense of line #${i}: '${line}'.`);
 		}
 		if(entry) {
 			entry.cached = line;
 			data.elements.push(entry);
-			if(firstComment) {
-				errors.push(`Line #${i} ('${line}') was an entry, but came after line #${firstComment}, which was a comment.`);
-			}
 		}
 		i++;
+		if(archive) {
+			break;
+		}
+	}
+	if(archive) {
+		while(true) {
+			if(i >= lines.length) {
+				break;
+			}
+			let line = lines[i];
+			let entry = null;
+			if(BLANK.test(line)) {
+			} else if(ENTRY_ARCHIVE.test(line)) {
+				let [_, text, age] = line.match(ENTRY_ARCHIVE);
+				entry = new ListItem(text.trim(), null, getDateBefore(age, lastmodified), ARCHIVED);
+				entry.cached = line;
+				data.elements.push(entry);
+			} else {
+				errors.push(`Could not make sense of line #${i}: '${line}'.`);
+			}
+			i++;
+		}
 	}
 
 	return [data, errors];

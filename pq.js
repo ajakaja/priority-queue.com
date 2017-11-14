@@ -86,7 +86,7 @@ async function openFile(filename, create=false) {
 	if(fileList.includes(filename)) {
 		data = await loadFile(filename);
 	} else if(create) {
-		data =  new List("title", [], filename, [], new Date());
+		data =  new List("title", [], filename, new Date());
 		await fs.create(data);
 		fileList.push(filename);
 		files[filename] = data;
@@ -178,4 +178,14 @@ function redo() {
 	activeList.deltas[history].apply();
 	view.render();
 	history++;
+}
+
+function archiveCompleted() {
+	let completed = activeList.elements.filter(e => e.status == COMPLETE);
+	let incomplete = activeList.elements.filter(e => e.status == INCOMPLETE);
+	for(let el of completed) {
+		set(el, "status", ARCHIVED);
+	}
+	setEditedFlag();
+	view.render();
 }
