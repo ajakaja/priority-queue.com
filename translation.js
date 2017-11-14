@@ -57,20 +57,9 @@ function serialize(list) {
 	}
 
 	let ret = list.title + "\n";
-	list.elements.sort((a, b) => {
-		if(a.status == ARCHIVED) {
-			if(b.status == ARCHIVED) {
-				return 0;
-			} else {
-				return 1;
-			}
-		} else if (b.status == ARCHIVED ){
-			return -1;
-		}
-		return a.priority - b.priority;
-	});
+	sortListByPriority(list.elements);
 	for(let el of list.elements) {
-		if(el.status == DELETED) {
+		if(el.status == DELETED || el.status == ARCHIVED) {
 			continue;
 		}
 		if(!el.edited && el.cached) {

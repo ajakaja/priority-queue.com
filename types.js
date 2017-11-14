@@ -40,9 +40,8 @@ function sortListByPriority(list) {
 		if(a.status == ARCHIVED) {
 			if(b.status == ARCHIVED) {
 				return 0;
-			} else {
-				return 1;
 			}
+			return 1;
 		} else if (b.status == ARCHIVED ){
 			return -1;
 		}

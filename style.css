@@ -83,8 +83,6 @@ body {
 	min-width: 50px;
 }
 #listname.editing {
-	background-color: #466;
-	color: #66e;
 }
 #filemenu {
 	margin-left: auto;

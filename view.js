@@ -49,10 +49,10 @@ function initView() {
 	function setupList() {
 		$addButton.click(() => {
 			let lastPriority;
-			if(activeList.elements.length != 0) {
+			let $last = $("li.pqitem").last();
+			if($last.length > 0) {
 				let variance = randInt(1, 5);
-				lastPriority = Number.parseInt(activeList.elements[activeList.elements.length-1].priority)
-					+ variance; 
+				lastPriority = getPriority($last) + variance; 
 			} else {
 				lastPriority = 1;
 			}
@@ -199,12 +199,8 @@ function initView() {
 				}
 				e.stopPropagation();
 			});
-		$li.hover(() => {
-				$li.addClass("hover");
-			}, () => {
-				$li.removeClass("hover");
-			})
-			.mousedown((e) => {
+		$li.hover(() => $li.addClass("hover"), () =>  $li.removeClass("hover"))
+			.mousedown(e => {
 				holdStart = Date.now();
 				let time = holdStart;
 				//if we hold for more than holdTime, set as editing.
@@ -216,7 +212,8 @@ function initView() {
 			 	if(hints.selection) {
 					setHint("(click and hold to edit)", false);
 				}
-			}).mouseup((e) => {
+				e.stopPropagation();
+			}).mouseup(e => {
 				let now = Date.now();
 				if(now - holdStart < holdTime) {
 					if($li.hasClass("editing")) {
@@ -232,7 +229,7 @@ function initView() {
 				holdStart = null;
 				return false;
 			})
-			.click(() => { return false; });
+			.click(() => false );
 		renderStatus($li, item.status, item.priority);
 		$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
 		$li.find("div.edit").mousedown((e) => {
@@ -473,7 +470,7 @@ function initView() {
 	function renderList() {
 		unrender();
 		activeList.elements
-			.filter(e => e.status != ARCHIVED)
+			.filter(e => e.status != ARCHIVED && e.status != DELETED)
 			.forEach(li => {
 				$addButton.before(toHtml(li));
 			});
@@ -536,11 +533,16 @@ function initView() {
 		}
 	}
 	function removeEditing($li) {
-		let $text = $li.children(".text");
 		$li.removeClass("editing");
-		$text.attr("contenteditable", "false");
 		window.getSelection().removeAllRanges();
-		syncText($li, $text.text());
+		let $text = $li.children(".text");
+		if($text.length > 0) {
+			$text.attr("contenteditable", "false");
+			syncText($li, $text.text());
+		}
+		if($li.is("[contenteditable]")) {
+			$li.attr("contenteditable", "false");
+		}
 	}
 	function syncText($li, text) {
 		let item = $li.data("item");
@@ -654,6 +656,9 @@ function initView() {
 			} else {
 				$save.removeClass("edited");
 			}
+		},
+		isEditing() {
+			return $(".editing").length > 0;
 		}
 		
 	}
