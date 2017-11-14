@@ -72,27 +72,27 @@ function startSaving() {
 	}, 1000);
 }
 
-function save() {
+async function save() {
 	__edited = false;
 	activeList.lastmodified = new Date();
-	fs.save(activeList);
+	await fs.save(activeList);
 	view.setEdited(false);
 	view.setHint("saved");
 }
 
 async function openFile(filename, create=false) {
 	let data, errors;
+	view.toggleLoader();
 	if(fileList.includes(filename)) {
-		if(files[filename]) {
-			data = files[filename];
-		} else {
-			[data, errors] = await fs.load(filename);
-		}
+		data = await loadFile(filename);
 	} else if(create) {
-		data =  new List("title", [], filename, new Date());
+		data =  new List("title", [], filename, [], new Date());
 		await fs.create(data);
 		fileList.push(filename);
 		files[filename] = data;
+	}
+	if(data == null) {
+		throw `${filename} could not be opened`;
 	}
 	if(activeList != data) {
 		activeList = data;
@@ -100,6 +100,44 @@ async function openFile(filename, create=false) {
 		view.render();
 	}
 	Cookies.set(LAST_OPEN_COOKIE, filename);
+	view.toggleLoader();
+}
+
+async function loadFile(filename) {
+	let data, errors;
+	if(files[filename]) {
+		data = files[filename];
+	} else {
+		[data, errors] = await fs.load(filename);
+	}
+	files[filename] = data;
+	return data;
+}
+
+async function deleteFile(filename) {
+	view.toggleLoader();
+	if(fileList.includes(filename)) {
+		await fs.delete(filename);
+		fileList.removeElement(filename);
+		files[filename] = null;
+		if(activeList.filename == filename) {
+			activeList = null;
+			view.render();
+		}
+	}
+	view.toggleLoader();
+}
+
+async function renameFile(oldname, newname) {
+	view.toggleLoader();
+	let data = await loadFile(oldname);
+	data.newfilename = newname;
+	await fs.save(data);
+	if(activeList == data) {
+		view.render();
+	}
+	view.setHint(`renamed '${oldname}' to '${newname}'`);
+	view.toggleLoader();
 }
 
 function logout() {

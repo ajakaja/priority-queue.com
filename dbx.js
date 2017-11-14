@@ -82,17 +82,15 @@ function initializeDropbox() {
 				});
 			}
 			let text = serialize(data);
-			if(!data.filename) {
-				throw "No filename";
-			}
-			console.log("saving data in " + data.filename);
+			console.log("Saving data in " + data.filename);
 			let response = await dbx.filesUpload({path: "/" + data.filename, 
 					contents: text, 
 					client_modified: toISOwithoutMillis(data.lastmodified),
 					mode: "overwrite"});
 		},
 		async delete(filename) {
-			throw "not yet implemented";
+			console.log(`Deleting file: '${filename}'.`);
+			await dbx.filesDelete({path: "/" + filename});
 		},
 		async create(data) {
 			let text = serialize(data);
@@ -136,9 +134,6 @@ function initializeDropbox() {
 			} catch (e) {
 				return false;
 			}
-		},
-		leak() {
-			return dbx;
 		}
 	};
 }

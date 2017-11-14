@@ -15,6 +15,15 @@ Array.prototype.move = function(item, i) {
 	return this;
 }
 
+Array.prototype.removeElement = function(el) {
+	let index = this.indexOf(el);
+	if(index == -1) {
+		return null;
+	}
+	this.splice(index, 1);
+	return index;
+}
+
 function cycle(...fns) {
 	let gen = function*() {
 		let i = 0, l = fns.length;

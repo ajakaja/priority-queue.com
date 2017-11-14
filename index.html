@@ -19,9 +19,10 @@
 	<script src="pq.js"></script>
 	<script src="dbx.js"></script>
 	<script src="cookie.js"></script>
+
 </head>
 <body>
-	<div id="modal">
+	<div id="modal" class="hidden">
 		<div id="modal-content">
 			<div id="modal-dropbox"><span>Connect a <strong>Dropbox</strong> account:</span>
 			<a href="" id="dropbox-auth">
@@ -34,31 +35,44 @@
 		<div id="listholder">
 			<div id="nameholder">
 				<div id="listname"></div>
-				<div id="filename"></div>
-				<div id="loading" class="loader">•</div>
+				<div id="filemenu">
+					<div id="filename"></div>
+					<div id="fileselector">
+						<ul id="files">
+							<template id="filetemplate">
+								<li class="fileitem">
+									<div class="text"></div>
+									<div class="edit button">✎</div>
+									<div class="delete button"><svg width="20" height="20"><use xlink:href="#trashicon" />
+									</svg></div>
+									<div class="confirm hidden button">✔</div>
+									<div class="cancel hidden button">✗</div>
+								</li>
+							</template>
+						</ul>
+						<div id="newfile" contenteditable="true" placeholder="new list..."></div>
+					</div>
+				</div>
+				<div id="loading" class="loader hidden">•</div>
 				<div id="save">
 					<svg version="1.1" viewBox="0 0 30 30" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M22,4h-2v6c0,0.552-0.448,1-1,1h-9c-0.552,0-1-0.448-1-1V4H6C4.895,4,4,4.895,4,6v18c0,1.105,0.895,2,2,2h18  c1.105,0,2-0.895,2-2V8L22,4z M22,24H8v-6c0-1.105,0.895-2,2-2h10c1.105,0,2,0.895,2,2V24z"/><rect height="5" width="2" x="16" y="4"/></svg>
 				</div>
 				<div id="settings">☰</div>
 
 				<div id="trash">
-					<svg version="1.1" viewBox="0 0 30 30" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M19.71,26h-9.42c-1.019,0-1.875-0.766-1.988-1.779L6.5,8h17l-1.802,16.221C21.585,25.234,20.729,26,19.71,26z"/><path d="M24,6H6C5.448,6,5,5.552,5,5v0c0-0.552,0.448-1,1-1h18c0.552,0,1,0.448,1,1v0C25,5.552,24.552,6,24,6z"/><path d="M18,5h-6V4c0-0.552,0.448-1,1-1h4c0.552,0,1,0.448,1,1V5z"/></svg>
+					<svg><use xlink:href="#trashicon" /></svg>
 				</div>
 			</div>
-			<div id="fileselector">
-				<ul id="files">
-					<li id="newfile">+</li>
-				</ul>
-			</div>
+
 			<ul id="activelist">
 				<template id="rowtemplate">
 					<li class="pqitem" draggable="true">
 						<div class="pqpriority"></div>
-						<div class="pqtext"></div>
-						<div class="urgent">!</div>
-						<div class="check">✔</div>
-						<div class="edit">✎</div>
-						<div class="close">✗</div>
+						<div class="text"></div>
+						<div class="urgent button">!</div>
+						<div class="check button">✔</div>
+						<div class="edit button">✎</div>
+						<div class="close button">✗</div>
 						<div class="pqdate"></div>
 					</li>
 				</template>
@@ -67,5 +81,10 @@
 		</div>
 		<div id="hint" ></div>
 	</div>
+	<svg style="display: none">
+		<symbol id="trashicon" viewBox="0 0 30 30">
+			<path d="M19.71,26h-9.42c-1.019,0-1.875-0.766-1.988-1.779L6.5,8h17l-1.802,16.221C21.585,25.234,20.729,26,19.71,26z"/><path d="M24,6H6C5.448,6,5,5.552,5,5v0c0-0.552,0.448-1,1-1h18c0.552,0,1,0.448,1,1v0C25,5.552,24.552,6,24,6z"/><path d="M18,5h-6V4c0-0.552,0.448-1,1-1h4c0.552,0,1,0.448,1,1V5z"/>
+		</symbol>
+	</svg>
 </body>
 </html>

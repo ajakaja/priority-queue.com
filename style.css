@@ -1,8 +1,3 @@
-body {
-	height: 100%;
-	font-family: Verdana;
-	background: #9cc;
-}
 ::selection {
 	background-color: #ffb7b7;
 }
@@ -10,12 +5,18 @@ body {
     outline: none;
 }
 body {
+	font-family: Verdana;
+	background: #9cc;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 }
+[contenteditable=true]:empty::before {
+  content: attr(placeholder);
+  opacity: 0.4;
+}
 #modal {
-    display: none;
+    display: block;
     position: fixed;
     z-index: 1;
     left: 0;
@@ -25,6 +26,9 @@ body {
     overflow: auto;
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.4);
+}
+#modal.hidden {
+	display: none;
 }
 #modal-content {
 	margin: 60px auto;
@@ -83,25 +87,95 @@ body {
 	background-color: #466;
 	color: #66e;
 }
+#filemenu {
+	margin-left: auto;
+	position: relative;
+	display: inline-block;
+}
 #filename {
 	color: #eee;
 	opacity: 0.5;
-	min-width: 50px;
 	font-size: 0.8em;
 	padding: 5px;
-	border: 2px solid;
-	border-radius: 5px;
-	border-color: transparent;
 	cursor: pointer;
-}
-#filename:hover {
-	border-color: #eee;
 }
 #filename::after {
 	color: #eee;
 	opacity: 0.5;
 	content: " ▼ ";
 	font-size: 0.5em;
+}
+#fileselector {
+	display: none;
+	position: absolute;
+	min-width: 250px;
+	right: 0px;
+	padding: 30px 30px;
+	background-color: #abc;
+	color: #f9f9f9;
+	z-index: 1;
+	border: 2px solid rgba(0,0,0,0.5);
+	border-radius: 10px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+#filemenu:hover #fileselector {
+	display: block;
+}
+#filemenu.open #fileselector {
+	display: block;
+}
+#newfile {
+	padding: 5px;
+	background-color: #aaa;
+	cursor: text;
+}
+#files {
+	list-style-type: none;
+	padding: 0px;
+	margin: 0px;
+}
+#files li.fileitem:nth-child(odd) {
+	background: #8cc063;
+}
+#files li.fileitem:nth-child(even) {
+	background: #97a8b9;
+}
+#files li {
+	padding: 5px;
+	cursor: pointer;
+}
+#files li.fileitem:nth-child(n):hover {
+	background: #653965;
+}
+#files.editing {
+	cursor: text;
+}
+li.fileitem {
+	border-width: 0px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+}
+li.fileitem div.edit {
+	margin-left: auto;
+	opacity: 0.0;
+}
+li.fileitem div.delete {
+	opacity: 0.0;
+}
+li.fileitem.hover div.edit,
+li.fileitem.hover div.delete {
+	opacity: 0.5;
+}
+div.hidden {
+	display: none;
+}
+li.fileitem.selected {
+	box-shadow: inset 0 0 0 2px #000;
+}
+li.fileitem.selected div.button {
+	opacity: 0.5;
 }
 #trash {
 	position: absolute;
@@ -112,7 +186,7 @@ body {
 	pointer-events: none;
 }
 #trash.shown {
-	opacity: 0.5;
+	opacity: 0.7;
 	transition: opacity 0.5s;
 }
 #trash.shown.hover {
@@ -144,11 +218,14 @@ body {
   	animation-delay: -0.32s;
 }
 #loading {
-	display: none;
+	display: block;
 	position: absolute;
 	width: 100%;
 	text-align: center;
 	pointer-events: none;
+}
+#loading.hidden {
+	display: none;
 }
 @keyframes loader {
   0%,
@@ -162,7 +239,6 @@ body {
 }
 
 #save {
-	margin-left: auto;
 	text-align: right;
 	width: 30px;
 	opacity: 0.2;
@@ -181,41 +257,6 @@ body {
 	opacity: 0.5;
 	font-size: 1.5em;
 	padding: 5px;
-}
-#fileselector {
-	display: none;
-	position: absolute;
-	max-width: 440px;
-	width: 100%;
-	padding: 20px 30px;
-	background-color: #abc;
-	color: #f9f9f9;
-	z-index: 1;
-	box-shadow: inset 0 0 5px #666;
-}
-#newfile {
-	text-align: center;
-	background-color: #999;
-}
-
-#files {
-	list-style-type: none;
-	padding: 0px;
-	margin: 0px;
-}
-#files li.fileitem:nth-child(odd) {
-	background: #8cc063;
-}
-#files li.fileitem:nth-child(even) {
-	background: #97a8b9;
-}
-#files li {
-	padding: 5px;
-	border: 2px solid transparent;
-	cursor: pointer;
-}
-#files li:hover {
-	border-color: #666;
 }
 #activelist {
 	padding: 0px;
@@ -262,7 +303,7 @@ li.pqitem {
 	align-items: center;
 	justify-content: space-between;
 }
-.pqitem.complete div.pqtext {
+.pqitem.complete div.text {
 	text-decoration: line-through;
 }
 .pqitem.selected {
@@ -271,16 +312,10 @@ li.pqitem {
 	but adding borders on selection reflows the page.
 	this takes a bit more to render but is cleaner visually.*/
 }
-.pqitem.cancelled {
-	background: #666 !important;
-}
-.pqitem.cancelled div.pqtext {
-	text-decoration: line-through;
-}
 .pqitem.editing {
 	cursor: text;
 }
-.pqitem.editing div.pqtext {
+.pqitem.editing div.text {
 	opacity: 0.7;
 	background: #ffb7b7;
 }
@@ -305,16 +340,13 @@ div.pqdate {
 	padding: 0px 8px;
 	min-width: 20px;
 }
-div.pqtext {
+div.text {
 	padding-right: 5px;
 	padding-left: 2px;
 	flex: 1;
 }
 
-div.edit,
-div.close,
-div.check,
-div.urgent {
+div.button {
 	padding: 0px 4px 0px 4px;
 	opacity: 0.0;
 	transition: opacity 0.5s;
@@ -322,66 +354,44 @@ div.urgent {
 div.urgent {
 	font-weight: bold;
 }
-.pqitem.hover:not(.selected) div.close {
+.pqitem.hover:not(.selected) div.button {
 	opacity: 0.5;
 	transition: opacity 0.5s;
 }
-.pqitem.hover:not(.selected) div.check {
+.pqitem.selected div.button {
 	opacity: 0.5;
-	transition: opacity 0.5s;
-}
-.pqitem.hover:not(.selected) div.edit {
-	opacity: 0.5;
-	transition: opacity 0.5s;
-}
-.pqitem.hover:not(.selected) div.urgent {
-	opacity: 0.5;
-	transition: opacity 0.5s;
-}
-.pqitem.selected div.close {
-	opacity: 0.5;
-}
-.pqitem.selected div.check {
-	opacity: 0.5;
-}
-.pqitem.selected div.edit {
-	opacity: 0.5;
-}
-.pqitem.selected div.urgent {
-	opacity: 0.5;
-}
-.close:hover {
-	background: #d77;
-	opacity: 1.0;
-	color: #ccc;
 }
 .check:hover {
 	background: #77d;
 	opacity: 1.0;
 	color: #ccc;
 }
-.edit:hover {
+.edit:hover,
+.confirm:hover {
 	background: #7d7;
 	opacity: 1.0;
 	color: #ccc;
 }
-.urgent:hover {
+.delete:hover,
+.cancel:hover,
+.urgent:hover,
+.close:hover {
 	background: #d77;
 	opacity: 1.0;
 	color: #ccc;
 }
-.pqtext {
+.text {
 	white-space: nowrap;
 }
 #hint {
 	height: 2em;
-	width: 100%;
 	text-align: right;
 	font-family: monospace;
 	font-size: 0.8em;
 	opacity: 0.0;
 	font-style: italic;
 	padding-top: 10px;
+	margin-right: 20px;
 }
 
 @keyframes fadeout {

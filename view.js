@@ -29,18 +29,20 @@ function initView() {
 	const $newfile = $("#newfile");
 	const $settings = $("#settings");
 	const $modal = $("#modal");
-	const $fileselector = $("#fileselector");
-	const template = $("#rowtemplate").get()[0];
+	const rowtemplate = $("#rowtemplate").get()[0];
+	const filetemplate = $("#filetemplate").get()[0];
 	const $trash = $("#trash");
 	const $hint = $("#hint");
 	const $files = $("#files");
+	const $filemenu = $("#filemenu");
 
-	let toggleLoader = cycle(() => $loader.css("display", "block"), () => $loader.hide());
+	let toggleLoader = () => {$loader.toggleClass("hidden")};
+	let toggleModal = () => {$modal.toggleClass("hidden")};
 
 	$("#dropbox-auth").attr("href", fs.getAuthLink());
 	$modal.click((e) => {
 			if($(e.target).is($modal)) {
-				$modal.hide();
+				toggleModal();
 				setHint("you have to log in...");
 			}
 		});
@@ -66,22 +68,16 @@ function initView() {
 		setupDrag();
 		setupHotkeys();
 
-		$("body").click((e) => {
-			//remove selections if we click outside the list
-			if(!e.target.closest("ul")) {
-				setAsEditing(null);
-				setSelection(null);
-				if($fileselector.is(":visible")) {
-					$fileselector.css("display", "none");
-				}
-			}
+		$(document).mousedown((e) => {
+			setAsEditing(null);
+			setSelection(null);
 		});
 	}
 
 	function setupTitleBar() {
 		$name.dblclick(() => {
 			$name.attr("contenteditable", "true");
-			select($name.get()[0]);
+			selectText($name);
 			$name.addClass("editing");
 		}).keydown((e) => {
 			if($name.hasClass("editing")) {
@@ -97,100 +93,101 @@ function initView() {
 				}
 			}
 		});
-		$filename.click((e) => {
-			$("#fileselector").toggle();
-			e.stopPropagation();
-		});
-	/*	.dblclick(() => {
-			$filename.attr("contenteditable", "true");
-			select($filename.get()[0]);
-			$filename.addClass("editing");
-		}).keydown((e) => {
-			if($filename.hasClass("editing")) {
-				if(e.which == ENTER) {
-					e.preventDefault();
-					e.stopPropagation();
-					window.getSelection().removeAllRanges();
-					$filename.removeClass("editing");
-					$filename.attr("contenteditable", "false");
-					if($filename.text() != activeList.filename) {
-						let filename = validFilename($filename.text());
-						if(!filename) {
-							$filename.text(activeList.filename);
-							setHint("filenames must be alphanumeric + .txt");
-						} else {
-							setEditedFlag();
-							set(activeList, "newfilename" filename);
-							activeList.filename = filename;
-						}
-					}
+		$save.click(save);
+		$settings.click(logout);
+		$newfile.keydown((e) => {
+			if(e.which == ENTER) {
+				let validname = validFilename($newfile.text());
+				if(!!validname) {
+					let $li = createFileItem(validname);
+					$li.appendTo($files);
+					$newfile.text("");
+					$filemenu.removeClass("open");
+					openFile(validname, true);
+				} else {
+					setHint("filenames must be alphanumeric + .txt");
+					$newfile.text("");
 				}
+				e.preventDefault();
 			}
-		});*/
-		$save.click((e) => {
-			save();
-		});
-		$settings.click((e) => {
-			logout();
-		});
-		$newfile.click((e) => {
 			e.stopPropagation();
-			e.preventDefault();
-			let $li = createFileItem("new file...");
-			$li.attr("contenteditable", "true")
-				.addClass("editing")
-				.insertBefore($newfile)
-				.keydown((e) => {
-					if(e.which == ENTER) {
-						$li.attr("contenteditable", "false");
-						$li.removeClass("editing");
-						e.preventDefault();
-						e.stopPropagation();
-						window.getSelection().removeAllRanges();
-						let name = validFilename($li.text());
-						$li.text(name);
-						if(!!name) {
-							openFile(name, true);
-						} else {
-							setHint("filenames must be alphanumeric + .txt");
-						}
-						$fileselector.hide();
-					}
-				});
-			select($li.get()[0]);
+		});
+		$filename.click((e) => {
+			$filemenu.toggleClass("open");
 		});
 	}
 
-	function createFileItem(item) {
-		let $li = $("<li/>", {
-			text: item,
-			class: "fileitem"
-		});
-		$li.click((e) => {
+	function createFileItem(filename) {
+		const $clone = $(document.importNode(filetemplate.content, true));
+		let $li = $clone.find("li.fileitem");
+		setText($li, filename);
+		$li.data("filename", filename);
+		$li.find("div.text").keydown(e => {
+			if(e.which == ENTER) {
+				//rename instead of create new
+				//don't rename to a duplicate filename / one that already exists
+				let newname = validFilename(getText($li));
+				let oldname = $li.data("filename");
+				if(!!newname) {
+					removeEditing($li);
+					setText($li, newname);
+					renameFile(oldname, newname).then(() => {
+						$li.data(filename, newname);
+						$filemenu.removeClass("open");
+					});
+				} else {
+					setHint("filenames must be alphanumeric + .txt");
+				}
+				e.preventDefault();
+			}
 			e.stopPropagation();
-			e.preventDefault();
-			$fileselector.hide();
-			toggleLoader();
-			openFile($li.text())
-				.then(toggleLoader);
+		});
+		$li.mousedown((e) => {
+			openFile(getText($li));
+			return false;
+		}).hover(() => $li.addClass("hover"), () => $li.removeClass("hover"));
+		$li.find("div.edit").mousedown((e) => {
+			setAsEditing($li);
+			$filemenu.addClass("open");
+			return false
+		});
+		let $delete = $li.find("div.delete"),
+			$cancel = $li.find("div.cancel"),
+			$confirm = $li.find("div.confirm");
+		$delete.mousedown((e) => {
+			$confirm.removeClass("hidden");	
+			$cancel.removeClass("hidden");		
+			$delete.addClass("hidden");
+			setSelection($li);
+			return false;
+		});
+		$confirm.mousedown((e) => {
+			deleteFile(getText($li))
+				.then(() => $li.detach());
+			return false;
+		});
+		$cancel.mousedown((e) => {
+			$confirm.addClass("hidden");	
+			$cancel.addClass("hidden");		
+			$delete.removeClass("hidden");
+			return false;
 		});
 		return $li;
 	}
 
+
 	function toHtml(item) {
-		const $clone = $(document.importNode(template.content, true));
+		const $clone = $(document.importNode(rowtemplate.content, true));
 		let $li = $clone.find("li.pqitem");
 		$li.data("item", item);
-		let $text = $li.find("div.pqtext");
+		let $text = $li.find("div.text");
 		$text.text(item.text)
 			.keydown((e) => {
 				if(e.which == ENTER) {
-					e.preventDefault();
-					e.stopPropagation();
 					removeEditing($li);
-					window.getSelection().removeAllRanges();
-					setSelection($li);
+					e.preventDefault();
 				}
+				e.stopPropagation();
 			});
 		$li.hover(() => {
 				$li.addClass("hover");
@@ -209,8 +206,7 @@ function initView() {
 			 	if(hints.selection) {
 					setHint("(click and hold to edit)", false);
 				}
-			})
-			.mouseup((e) => {
+			}).mouseup((e) => {
 				let now = Date.now();
 				if(now - holdStart < holdTime) {
 					if($li.hasClass("editing")) {
@@ -224,19 +220,18 @@ function initView() {
 					}
 				}
 				holdStart = null;
-				e.preventDefault();
-			});
+				return false;
+			})
+			.click(() => { return false; });
 		renderStatus($li, item.status, item.priority);
-		$li.find("div.pqdate")
-			.text(`(${getAgeString(item.date)})`);
+		$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
 		$li.find("div.edit").mousedown((e) => {
 				setAsEditing($li);
-				e.stopPropagation();
-				e.preventDefault();
+				return false;
 			});
 		$li.find("div.close").mousedown((e) => {
-			remove($li, item);
-			e.stopPropagation();
+			remove($li);
+			return false;
 		});
 		$li.find("div.check").mousedown((e) => {
 			if(item.status == INCOMPLETE) {
@@ -244,7 +239,7 @@ function initView() {
 			} else if(item.status == COMPLETE) {
 				setStatus($li, INCOMPLETE);
 			}
-			e.stopPropagation();
+			return false;
 		});
 		$li.find("div.urgent").mousedown((e) => {
 			e.stopPropagation();
@@ -254,6 +249,7 @@ function initView() {
 				setPriority($li, priority);
 				$li.detach().insertBefore($first);
 			}
+			return false;
 		});
 		addDrag($li);
 		return $li;
@@ -476,36 +472,30 @@ function initView() {
 			$filename.text(activeList.filename);
 		}
 		for(let i of fileList) {
-			createFileItem(i).prependTo($files);
+			createFileItem(i).appendTo($files);
 		}
 	}
 	function unrender() {
 		$("li.pqitem").remove();
 		$("li.fileitem").remove();
+		$filename.text("");
+		$name.text("");
 	}
 	function setAsEditing($li) {
-		if($li) {
-			const $text = $li.children(".pqtext");
-			$text.attr("contenteditable", "true");
-			setSelection($li);
-			$li.addClass("editing");
-			select($text.get()[0]);
-		}
-
-		$ul.children("li.pqitem").each( (i, e)=> {
+		$(".editing").each((i, e) => {
 			let $e = $(e)
 			if(!$e.is($li)) {
-				let $div = $e.children(".pqtext");
-				let text = $div.text();
-				let item = $e.data("item");
-				if(item.text != text) {
-					set(item, "text", text);
-				}
-				$div.attr("contenteditable", "false");
-				$e.removeClass("editing");
+				removeEditing($e);
 			}
 		});
 		$name.removeClass("editing");
+		if($li && !$li.hasClass("editing")) {
+			const $text = $li.children(".text");
+			$text.attr("contenteditable", "true");
+			setSelection($li);
+			$li.addClass("editing");
+			selectText($text);
+		}
 	}
 
 	function renderStatus($li, status, priority) {
@@ -534,14 +524,23 @@ function initView() {
 		}
 	}
 	function removeEditing($li) {
-		let $div = $li.children(".pqtext");
+		let $text = $li.children(".text");
 		$li.removeClass("editing");
-		$div.attr("contenteditable", "false");
+		$text.attr("contenteditable", "false");
+		window.getSelection().removeAllRanges();
+		syncText($li, $text.text());
+	}
+	function syncText($li, text) {
 		let item = $li.data("item");
-		let text = $div.text();
-		if(item.text != text) {
-			set(item, "text", text);
+		if(item) {
+			if(item.text != text) {
+				set(item, "text", text);
+			}
 		}
+	}
+	function setText($li, text) {
+		let $text = $li.find("div.text");
+		$text.text(text);
 	}
 	function highlight($el) {
 		$el.addClass("highlight");
@@ -549,7 +548,8 @@ function initView() {
 			$el.removeClass("highlight");
 		}, 1000);
 	}
-	function select(node) {
+	function selectText($el) {
+		let node = $el.get()[0];
 		let range = document.createRange();
 		let selection = window.getSelection();
 		range.selectNodeContents(node);
@@ -563,7 +563,7 @@ function initView() {
 				$li[0].scrollIntoView(false);
 			}
 		}
-		$ul.children("li").each( (i, e) => {
+		$(".selected").each((i, e) => {
 			let $e = $(e);
 			if(!$e.is($li)) {
 				$e.removeClass("selected");
@@ -590,12 +590,10 @@ function initView() {
 		}
 	}
 	function getText($li) {
-		return $li.find("div.pqtext").text();
+		return $li.find("div.text").text();
 	}
-	function remove($li, item) {
-		if(typeof item === 'undefined') {
-			item = $li.data("item");
-		}
+	function remove($li) {
+		let item = $li.data("item");
 		set(item, "status", DELETED);
 		$li.detach();
 	}
@@ -615,19 +613,24 @@ function initView() {
 		}
 	}
 
+	function setError(text) {
+		setHint(text);
+	}
+
 	setupTitleBar();
 	setupList();
 
 	return {
 		toggleLoader: toggleLoader,
 		render(loggedIn=true) {
+			unrender();
 			if(loggedIn) {
-				unrender();
-				renderList();
-				renderName();
+				if(activeList) {
+					renderList();
+					renderName();
+				}
 			} else {
-				unrender();
-				$("#modal").show();
+				toggleModal();
 			}
 		},
 		setHint(text, repeat) {
