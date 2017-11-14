@@ -33,7 +33,7 @@
 	</div>
 	<div class="container">
 		<div id="listholder">
-			<div id="nameholder">
+			<div id="titlebar">
 				<div id="listname"></div>
 				<div id="filemenu">
 					<div id="filename"></div>
@@ -55,9 +55,22 @@
 				</div>
 				<div id="loading" class="loader hidden">•</div>
 				<div id="save">
-					<svg version="1.1" viewBox="0 0 30 30" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M22,4h-2v6c0,0.552-0.448,1-1,1h-9c-0.552,0-1-0.448-1-1V4H6C4.895,4,4,4.895,4,6v18c0,1.105,0.895,2,2,2h18  c1.105,0,2-0.895,2-2V8L22,4z M22,24H8v-6c0-1.105,0.895-2,2-2h10c1.105,0,2,0.895,2,2V24z"/><rect height="5" width="2" x="16" y="4"/></svg>
+					<svg width="30" height="30">
+						<use xlink:href="#saveicon" />
+					</svg>
 				</div>
-				<div id="settings">☰</div>
+				<div id="settingsmenu">
+					<div id="settingsbutton">☰</div>
+					<div id="settings">
+						<ul id="options">
+							<li id="cleanup">deleted completed items</li>
+							<li id="archive">archive completed items</li>
+							<li id="renumber">renumber from 1</li>
+							<li id="about">about</li>
+							<li id="logout">logout</li>
+						</ul>
+					</div>
+				</div>
 
 				<div id="trash">
 					<svg><use xlink:href="#trashicon" /></svg>
@@ -84,6 +97,9 @@
 	<svg style="display: none">
 		<symbol id="trashicon" viewBox="0 0 30 30">
 			<path d="M19.71,26h-9.42c-1.019,0-1.875-0.766-1.988-1.779L6.5,8h17l-1.802,16.221C21.585,25.234,20.729,26,19.71,26z"/><path d="M24,6H6C5.448,6,5,5.552,5,5v0c0-0.552,0.448-1,1-1h18c0.552,0,1,0.448,1,1v0C25,5.552,24.552,6,24,6z"/><path d="M18,5h-6V4c0-0.552,0.448-1,1-1h4c0.552,0,1,0.448,1,1V5z"/>
+		</symbol>
+		<symbol id="saveicon" viewBox="0 0 30 30">
+			<path d="M22,4h-2v6c0,0.552-0.448,1-1,1h-9c-0.552,0-1-0.448-1-1V4H6C4.895,4,4,4.895,4,6v18c0,1.105,0.895,2,2,2h18  c1.105,0,2-0.895,2-2V8L22,4z M22,24H8v-6c0-1.105,0.895-2,2-2h10c1.105,0,2,0.895,2,2V24z"/><rect height="5" width="2" x="16" y="4"/>
 		</symbol>
 	</svg>
 </body>

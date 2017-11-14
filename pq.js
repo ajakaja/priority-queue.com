@@ -132,9 +132,15 @@ async function renameFile(oldname, newname) {
 	view.toggleLoader();
 	let data = await loadFile(oldname);
 	data.newfilename = newname;
+	data.lastmodified = new Date();
 	await fs.save(data);
+	files[oldname] = null;
+	files[newname] = data;
+	fileList.remove(oldname);
+	fileList.add(newname);
 	if(activeList == data) {
 		view.render();
+		Cookies.set(LAST_OPEN_COOKIE, filename);
 	}
 	view.setHint(`renamed '${oldname}' to '${newname}'`);
 	view.toggleLoader();
@@ -182,9 +188,29 @@ function redo() {
 
 function archiveCompleted() {
 	let completed = activeList.elements.filter(e => e.status == COMPLETE);
-	let incomplete = activeList.elements.filter(e => e.status == INCOMPLETE);
 	for(let el of completed) {
 		set(el, "status", ARCHIVED);
+	}
+	setEditedFlag();
+	view.render();
+}
+
+function deleteCompleted() {
+	let completed = activeList.elements.filter(e => e.status == COMPLETE);
+	for(let el of completed) {
+		set(el, "status", DELETED);
+	}
+	setEditedFlag();
+	view.render();
+}
+function resetPriorities() {
+	sortListByPriority(activeList.elements);
+	let i = 1;
+	for(let e of activeList.elements) {
+		if(e.status != ARCHIVED && e.status != DELETED) {
+			set(e, "priority", i);
+			i++;
+		}
 	}
 	setEditedFlag();
 	view.render();

@@ -67,19 +67,18 @@ body {
 #listholder {
 	box-shadow: 5px 5px 10px #666;
 }
-#nameholder {
+#titlebar {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	justify-content: space-between;
-	width: 100%;
 	position: relative;
 	box-shadow: inset 0 0 5px #666;
 	background-color: #699;
+	padding: 5px;
 }
 #listname {
 	color: #eee;
-	margin-left: 10px;
 	padding: 5px;
 	min-width: 50px;
 }
@@ -104,6 +103,9 @@ body {
 	opacity: 0.5;
 	content: " ▼ ";
 	font-size: 0.5em;
+}
+#filename:hover {
+	opacity: 0.9;
 }
 #fileselector {
 	display: none;
@@ -134,17 +136,17 @@ body {
 	padding: 0px;
 	margin: 0px;
 }
-#files li.fileitem:nth-child(odd) {
-	background: #8cc063;
+#files li:nth-child(odd) {
+	background: #8ca083;
 }
-#files li.fileitem:nth-child(even) {
-	background: #97a8b9;
+#files li:nth-child(even) {
+	background: #97a8c9;
 }
 #files li {
 	padding: 5px;
 	cursor: pointer;
 }
-#files li.fileitem:nth-child(n):hover {
+#files li:nth-child(n):hover {
 	background: #653965;
 }
 #files.editing {
@@ -253,11 +255,52 @@ li.fileitem.selected div.button {
 #save.edited {
 	opacity: 0.7;
 }
-#settings {
+#settingsbutton {
 	opacity: 0.5;
 	font-size: 1.5em;
-	padding: 5px;
+	line-height: 1.5em;
 }
+#settingsbutton:hover {
+	opacity: 0.9;
+}
+#settings {
+	display: none;
+	position: absolute;
+	min-width: 250px;
+	right: 0px;
+	padding: 30px 30px;
+	background-color: #abc;
+	color: #f9f9f9;
+	z-index: 1;
+	border: 2px solid rgba(0,0,0,0.5);
+	border-radius: 10px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+#settingsmenu:hover #settings {
+	display: block;
+}
+#settings.open {
+	display: block;
+}
+#settings ul {
+	list-style-type: none;
+	padding: 0px;
+	margin: 0px;
+}
+#settings ul li:nth-child(odd) {
+	background: #8ca083;
+}
+#settings ul li:nth-child(even) {
+	background: #97a8c9;
+}
+#settings ul li {
+	padding: 5px;
+	cursor: pointer;
+}
+#settings ul li:nth-child(n):hover {
+	background: #653965;
+}
+
 #activelist {
 	padding: 0px;
 	margin: 0px;

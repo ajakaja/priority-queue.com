@@ -27,7 +27,6 @@ function initView() {
 	const $filename = $("#filename");
 	const $addButton = $("#additem");
 	const $newfile = $("#newfile");
-	const $settings = $("#settings");
 	const $modal = $("#modal");
 	const rowtemplate = $("#rowtemplate").get()[0];
 	const filetemplate = $("#filetemplate").get()[0];
@@ -41,11 +40,11 @@ function initView() {
 
 	$("#dropbox-auth").attr("href", fs.getAuthLink());
 	$modal.click((e) => {
-			if($(e.target).is($modal)) {
-				toggleModal();
-				setHint("you have to log in...");
-			}
-		});
+		if($(e.target).is($modal)) {
+			toggleModal();
+			setHint("you have to log in...");
+		}
+	});
 
 	function setupList() {
 		$addButton.click(() => {
@@ -71,6 +70,7 @@ function initView() {
 		$(document).mousedown((e) => {
 			setAsEditing(null);
 			setSelection(null);
+			$(".open").removeClass("open");
 		});
 	}
 
@@ -94,7 +94,6 @@ function initView() {
 			}
 		});
 		$save.click(save);
-		$settings.click(logout);
 		$newfile.keydown((e) => {
 			if(e.which == ENTER) {
 				let validname = validFilename($newfile.text());
@@ -112,9 +111,20 @@ function initView() {
 			}
 			e.stopPropagation();
 		});
-		$filename.click((e) => {
+		$filename.mousedown((e) => {
 			$filemenu.toggleClass("open");
+			return false;
 		});
+
+		$("#settingsbutton").mousedown(e => {
+			$("#settings").addClass("open");
+			return false;
+		});
+		$("#logout").mousedown(logout);
+		$("#cleanup").mousedown(deleteCompleted);
+		$("#archive").mousedown(archiveCompleted);
+		$("#renumber").mousedown(resetPriorities);
+		$("#about").mousedown();
 	}
 
 	function createFileItem(filename) {
@@ -558,17 +568,17 @@ function initView() {
 		selection.removeAllRanges();
 		selection.addRange(range);
 	}
-	function setSelection($li) {
-		if($li) {
-			$li.addClass("selected");
-			if(isOffscreen($li)) {
-				$li[0].scrollIntoView(false);
+	function setSelection($e) {
+		if($e) {
+			$e.addClass("selected");
+			if(isOffscreen($e)) {
+				$e[0].scrollIntoView(false);
 			}
 		}
-		$(".selected").each((i, e) => {
-			let $e = $(e);
-			if(!$e.is($li)) {
-				$e.removeClass("selected");
+		$(".selected").each((i, other) => {
+			let $other = $(other);
+			if(!$other.is($e)) {
+				$other.removeClass("selected");
 			}
 		});
 	}
