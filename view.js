@@ -361,6 +361,8 @@ function initView() {
 				$dragClone.remove();
 			} else if($dragClone) {
 				if($dragClone.parent().length > 0) {
+					startSequence();
+
 					$dragging.detach();
 					$dragClone.before($dragging);
 					$dragClone.detach();
@@ -392,6 +394,7 @@ function initView() {
 							$next = $next.next("li.pqitem");
 						}
 					}	
+					endSequence();
 				}
 				$dragging.removeClass("dragging");
 				$dragClone.remove();

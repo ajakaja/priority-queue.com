@@ -165,57 +165,85 @@ function logout() {
 }
 
 let history = 0;
+let sequence = null;
 
 function set(obj, key, value) {
 	let oldvalue = obj[key];
-	let delta = new Delta(obj, i => obj[key] = value, 
-			i => obj[key] = oldvalue);
+	let delta = new Delta(i => obj[key] = value, i => obj[key] = oldvalue);
+	if(obj.edited === false) {
+		obj.edited = true;
+	}
+	if(sequence) {
+		sequence.add(delta);
+	} else {
+		apply(delta);
+	}
+}
+
+function startSequence() {
+	sequence = new JoinedDelta();
+}
+function endSequence() {
+	let delta = sequence;
+	sequence = null;
+	apply(delta);
+}
+
+function apply(delta) {
 	if(history != activeList.deltas.length) {
 		activeList.deltas.splice(history);
 	}
 	history = activeList.deltas.push(delta);
 	delta.apply();
 	setEditedFlag();
-	if(obj.edited === false) {
-		obj.edited = true;
-	}
 }
 
 function undo() {
+	if(sequence != null) {
+		throw "Undo failed";
+	}
 	if(history == 0) {
 		return;
 	}
 	history--;
 	activeList.deltas[history].undo();
+	setEditedFlag();
 	view.render();
 }
 function redo() {
+	if(sequence != null) {
+		throw "Redo failed";
+	}
 	if(history == activeList.deltas.length) {
 		return;
 	}
 	activeList.deltas[history].apply();
 	view.render();
+	setEditedFlag();
 	history++;
 }
 
 function archiveCompleted() {
+	startSequence();
 	let completed = activeList.elements.filter(e => e.status == COMPLETE);
 	for(let el of completed) {
 		set(el, "status", ARCHIVED);
 	}
-	setEditedFlag();
+	endSequence();
 	view.render();
 }
 
 function deleteCompleted() {
+	startSequence();
 	let completed = activeList.elements.filter(e => e.status == COMPLETE);
 	for(let el of completed) {
 		set(el, "status", DELETED);
 	}
-	setEditedFlag();
+	endSequence();
 	view.render();
 }
 function resetPriorities() {
+	startSequence();
 	sortListByPriority(activeList.elements);
 	let i = 1;
 	for(let e of activeList.elements) {
@@ -224,6 +252,6 @@ function resetPriorities() {
 			i++;
 		}
 	}
-	setEditedFlag();
+	endSequence();
 	view.render();
 }

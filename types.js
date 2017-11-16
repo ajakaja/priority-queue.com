@@ -87,16 +87,28 @@ class List {
 
 //not exactly the memory-safe or elegantly immutable way to do things -- but should get the job done
 class Delta {
-	constructor(target, apply, undo) {
-		this.target = target;
+	constructor(apply, undo) {
 		this.apply = apply;
 		this.undo = undo;
 	}
-	apply(target) {
-		apply(target);
+}
+
+class JoinedDelta {
+	constructor() {
+		this.deltas = [];
 	}
-	undo(target) {
-		undo(target);
+	add(delta) {
+		this.deltas.push(delta);
+	}
+	apply() {
+		for(let d of this.deltas) {
+			d.apply();
+		}
+	}
+	undo() {
+		for(let d of this.deltas) {
+			d.undo();
+		}
 	}
 }
 
