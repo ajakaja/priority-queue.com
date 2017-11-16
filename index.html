@@ -23,10 +23,29 @@
 <body>
 	<div id="modal" class="hidden">
 		<div id="modal-content">
-			<div id="modal-dropbox"><span>Connect a <strong>Dropbox</strong> account:</span>
-			<a href="" id="dropbox-auth">
-				<img src="dropbox-icon.svg" id="dropbox-button" width="80px" height="80px"/>
-			</a>
+			<div id="modal-dropbox" class="hidden">
+				<span>Connect a <strong>Dropbox</strong> account:</span>
+				<a href="" id="dropbox-auth">
+					<img src="dropbox-icon.svg" id="dropbox-button" width="80px" height="80px"/>
+				</a>
+			</div>
+			<div id="modal-about" class="hidden">
+				<h1>About</h1>
+				<p>Priority-Queue.com is a minimalistic to-do list app. It's for managing your priorities. In a queue. Get it?</p>
+				<p class="indent">It uses the <a href="https://unhosted.org/">Unhosted</a> architecture, more or less: the website is completely static (and thus nearly free to host), and your data is stored in a place of your choosing. I use Dropbox for personal storage so I've set it up to use that for now, but there's no reason it couldn't use any other internet-accessible file system.</p>
+
+				<p class="indent">I really, really like the Unhosted style for apps[1]. Data is entirely owned by the user, in the sense that it never passes through a server owned by the app; I know Dropbox has my data but at least that's only one entity I have to trust[2], instead of many. It eliminates most of the complexity in making an app that runs and stays synchronized across multiple devices. And it makes it safe to 'gift' software to the public: hosting a static site is cheap-or-free, whereas running a server means monthly costs and infinite occasional maintenance (for the owner) and the chance that your data will disappear or be repurposed (for the user). And if I get tired of hosting it, you can just do it. Or host your own local copy. Or whatever you want; it's under the <a href="http://www.wtfpl.net/">do-whatever-the-eff-you-want</a> license, so, go nuts.</p>
+
+				<p class="indent">So creating unhosted-style apps and giving them out is, I think, a way to do something about the somewhat sorry direction software has gone, where everyone wants you to use their product so they show you pointless (for you, not them) ads (and convince people you're looking at them when you're not) (and trick you into clicking them), or sell your data to someone else who... wants to show you more pointless ads. I think it's telling that it's hard to find an honestly free and non-irritating version of mobile apps for everyday tasks like "flashlight" or "to-do list" or "metronome".</p>
+
+				<hr/>
+
+				<p class="indent">That all said, I'm not a very practiced web-developer or anything like that, so I really can't vouch for the design or implementation of any of this, and it's possible some bug might randomly delete your data (but Dropbox can restore the old version, anyway. Neat). I also haven't tried <em>at all</em> to use backwards-compatible HTML/CSS/JS, since this was also a chance to learn the fancy new stuff. And I haven't looked into accessibility at all, but would like to.</p>
+
+				<p>Pull requests welcome at <a href="https://github.com/ajakaja/priority-queue.com">https://github.com/ajakaja/priority-queue.com</a>.</p>
+				<p>Or go see if there's anything on <a href="http://alexkritchevsky.com">my blog</a> yet.</p>
+
+				<p><small>[1] Though their website is... a slog. A simpler manifesto is overdue.</small><br/><small>[2] Though they are, admittedly, sometimes hard to trust, and I mean to someday use a less sketchy alternative.</small></p>
 			</div>
 		</div>
 	</div>
@@ -34,6 +53,11 @@
 		<div id="listholder">
 			<div id="titlebar">
 				<div id="listname"></div>
+				<div id="save">
+					<svg width="30" height="30">
+						<use xlink:href="#saveicon" />
+					</svg>
+				</div>
 				<div id="filemenu">
 					<div id="filename"></div>
 					<div id="fileselector">
@@ -53,11 +77,6 @@
 					</div>
 				</div>
 				<div id="loading" class="loader hidden">•</div>
-				<div id="save">
-					<svg width="30" height="30">
-						<use xlink:href="#saveicon" />
-					</svg>
-				</div>
 				<div id="settingsmenu">
 					<div id="settingsbutton">☰</div>
 					<div id="settings">

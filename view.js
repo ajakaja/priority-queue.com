@@ -9,6 +9,7 @@ function initView() {
 	const ESCAPE = 27;
 	const SPACE = 32;
 	const Z = 90;
+	const S = 83;
 
 	const hints = {};
 	const NEWTEXT = "new task...";
@@ -34,15 +35,15 @@ function initView() {
 	const $hint = $("#hint");
 	const $files = $("#files");
 	const $filemenu = $("#filemenu");
+	const $settings = $("#settings");
 
-	let toggleLoader = () => {$loader.toggleClass("hidden")};
-	let toggleModal = () => {$modal.toggleClass("hidden")};
+	let toggleLoader = () => $loader.toggleClass("hidden");
 
 	$("#dropbox-auth").attr("href", fs.getAuthLink());
+
 	$modal.click(e => {
 		if($(e.target).is($modal)) {
 			toggleModal();
-			setHint("you have to log in...");
 		}
 	});
 
@@ -124,7 +125,21 @@ function initView() {
 		$("#cleanup").mousedown(deleteCompleted);
 		$("#archive").mousedown(archiveCompleted);
 		$("#renumber").mousedown(resetPriorities);
-		$("#about").mousedown();
+		$("#about").mousedown(() => {
+			$("#settings").removeClass("open");
+			$("#modal-about").removeClass("hidden");
+			toggleModal();
+		});
+	}
+
+	function toggleModal() {
+		if($modal.hasClass("hidden")) {
+			$modal.removeClass("hidden");
+		} else {
+			$modal.addClass("hidden");
+			$("#modal-dropbox").addClass("hidden");
+			$("#modal-about").addClass("hidden");
+		}
 	}
 
 	function createFileItem(filename) {
@@ -191,9 +206,12 @@ function initView() {
 		if(activeList.filename) {
 			$filename.text(activeList.filename);
 		}
+		$("li.fileitem").remove();
+		fileList.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 		for(let i of fileList) {
 			createFileItem(i).appendTo($files);
 		}
+		$save.addClass("shown");
 	}
 	function unrender() {
 		$("li.pqitem").remove();
@@ -273,6 +291,9 @@ function initView() {
 	function mousedownHandler(e) {
 		let $target = $(e.target);
 		let $this = $(this);
+		if(e.button != 0) {
+			return;
+		}
 		if($target.is("div.edit")) {
 			setAsEditing($this);
 			return false;
@@ -313,12 +334,19 @@ function initView() {
 	function mouseupHandler(e) {
 		let now = Date.now();
 		let $this = $(this);
+		if(e.button != 0) {
+			return;
+		}
 		if(now - holdStart < holdTime) {
 			if($this.hasClass("editing")) {
 				setAsEditing($this);
 			} else {
-				let data = $this.data("item");
-				setStatus($this, toggle(data.status));
+				if(e.shiftKey) {
+					setSelection($this);
+				} else {
+					let data = $this.data("item");
+					setStatus($this, toggle(data.status));
+				}
 			}
 		}
 		holdStart = null;
@@ -464,27 +492,30 @@ function initView() {
 	function setupHotkeys() {
 		$(document).keydown(e => {
 			let $selection = $("li.selected");
-			let $li;
 			switch (e.which) {
 				case UP:
 					if($selection.length == 0) {
-						$li = $ul.find("li.pqitem").last();
+						setSelection($ul.find("li.pqitem").last());
 					} else {
-						$li = $selection.prev("li.pqitem");
-					}
-					if($li.length) {
-						setSelection($li);
+						let $prev = $selection.prev("li.pqitem");
+						if(e.metaKey) {
+							swap($selection, $prev);
+						} else {
+							setSelection($prev);
+						}
 					}
 					e.preventDefault();
 					break;
 				case DOWN:
 					if($selection.length == 0) {
-						$li = $ul.find("li.pqitem").first();
+						setSelection($ul.find("li.pqitem").first());
 					} else {
-						$li = $selection.next("li.pqitem");
-					}
-					if($li.length) {
-						setSelection($li);
+						let $next = $selection.next("li.pqitem");
+						if(e.metaKey) {
+							swap($selection, $next);
+						} else {
+							setSelection($next);
+						}
 					}
 					e.preventDefault();
 					break;
@@ -526,8 +557,29 @@ function initView() {
 						return false;
 					}
 					break;
+				case S:
+					if(e.metaKey || e.ctrlKey) {
+						save();
+						return false;
+					}
+				break;
 			}
 		});
+	}
+
+	function swap($a, $b) {
+		let pA = getPriority($a);
+		let pB = getPriority($b);
+		startSequence();
+		setPriority($a, pB);
+		setPriority($b, pA);
+		endSequence();
+		let $tmp = $('<span>').hide();
+		$a.before($tmp);
+		$b.before($a);
+		$tmp.replaceWith($b);
+		highlight($a);
+		highlight($b);
 	}
 
 	function setAsEditing($li) {
@@ -569,7 +621,8 @@ function initView() {
 		if(item.status != status) {
 			set(item, "status", status);
 		}
-		renderStatus($li, status, item.priority);
+		renderStatus($li, status);
+		renderPriority($li, status, item.priority);
 	}
 	function removeEditing($li) {
 		$li.removeClass("editing");
@@ -610,7 +663,7 @@ function initView() {
 		selection.addRange(range);
 	}
 	function setSelection($e) {
-		if($e) {
+		if($e && $e.length) {
 			$e.addClass("selected");
 			if(isOffscreen($e)) {
 				$e[0].scrollIntoView(false);
@@ -687,6 +740,7 @@ function initView() {
 				}
 			} else {
 				unrender();
+				$("#modal-dropbox").removeClass("hidden");
 				toggleModal();
 			}
 		},

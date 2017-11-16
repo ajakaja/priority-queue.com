@@ -11,6 +11,14 @@ body {
 	display: flex;
 	flex-direction: column;
 }
+hr {
+	border: 0;
+	height: 1px;
+	background: #333;
+}
+p.indent {
+	text-indent: 2em;
+}
 [contenteditable=true]:empty::before {
   content: attr(placeholder);
   opacity: 0.4;
@@ -35,17 +43,24 @@ body {
 	background-color: #acc;
     padding: 20px;
     border: 1px solid #888;
-    max-width: 400px;
-    width: 100%;
-    height: 200px;
+    max-width: 80%;
 }
 #modal-dropbox {
 	height: 100%;
 	display: flex;
-	justify-content: space-around;
 	align-items: center;
 	flex-direction: column;
 	font-size: 14px;
+}
+#modal-dropbox.hidden {
+	display: none;
+}
+#modal-about {
+	height: 100%;
+	font-size: 14px;
+}
+#modal-about.hidden {
+	display: none;
 }
 #dropbox-button {
 	border: 1px solid transparent;
@@ -162,10 +177,12 @@ li.fileitem div.edit {
 }
 li.fileitem div.button {
 	opacity: 0.0;
+	visibility: visible;
 	transition: opacity 0.5s;
 }
 li.fileitem:hover div.button {
 	opacity: 0.5;
+	visibility: visible;
 	transition: opacity 0.5s;
 }
 div.hidden {
@@ -175,6 +192,7 @@ li.fileitem.selected {
 	box-shadow: inset 0 0 0 2px #000;
 }
 li.fileitem.selected div.button {
+	visibility: visible;
 	opacity: 0.5;
 }
 #trash {
@@ -248,6 +266,10 @@ li.fileitem.selected div.button {
 	width: 30px;
 	opacity: 0.2;
 	cursor: pointer;
+	visibility: hidden;
+}
+#save.shown {
+	visibility: visible;
 }
 #save svg {
 	width: 30px;
@@ -397,13 +419,16 @@ div.urgent {
 }
 .pqitem div.button {
 	opacity: 0.0;
+	visibility: hidden;
 	transition: opacity 0.5s;
 }
 .pqitem:hover div.button {
 	opacity: 0.5;
+	visibility: visible;
 	transition: opacity 0.5s;
 }
 .pqitem.selected div.button {
+	visibility: visible;
 	opacity: 0.5;
 }
 .check:hover {
