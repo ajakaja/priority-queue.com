@@ -304,7 +304,6 @@ li.fileitem.selected div.button {
 	margin: 0px;
   	list-style-type: none;
   	display: inline-block;
-  	white-space: nowrap;
   	width: 100%;
 }
 
@@ -312,13 +311,12 @@ li.fileitem.selected div.button {
     position: relative;
     padding: 0px;
 	transition: 0.2s;
-	height: 2.5em;
 }
 #activelist li:not(.editing) {
 	cursor: pointer;
 }
 
-#activelist li div {
+#activelist li {
 	line-height: 2.5em;
 }
 #activelist li.pqitem:nth-child(odd) {
@@ -338,7 +336,6 @@ li.fileitem.selected div.button {
 
 li.pqitem {
 	border-width: 0px;
-	overflow: hidden;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -367,7 +364,6 @@ li.pqitem {
 li.pqitem:first-of-type div.urgent {
 	display: none;
 }
-
 div.pqpriority {
 	opacity: 0.5;
 	width: 23px;
@@ -385,6 +381,7 @@ div.text {
 	padding-right: 5px;
 	padding-left: 2px;
 	flex: 1;
+	line-height: 1.5em;
 }
 
 div.button {
@@ -420,9 +417,6 @@ div.urgent {
 	background: #d77;
 	opacity: 1.0;
 	color: #ccc;
-}
-.text {
-	white-space: nowrap;
 }
 #hint {
 	height: 2em;

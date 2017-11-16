@@ -59,7 +59,7 @@ function initView() {
 			const item = new ListItem(NEWTEXT, lastPriority, new Date(), DELETED);
 			activeList.elements.push(item);
 			set(item, "status", INCOMPLETE);
-			let $li = toHtml(item);
+			let $li = createPQItem(item);
 			$addButton.before($li);
 			setAsEditing($li);
 		});
@@ -186,16 +186,19 @@ function initView() {
 	}
 
 
-	function toHtml(item) {
+	function createPQItem(item) {
 		const $clone = $(document.importNode(rowtemplate.content, true));
 		let $li = $clone.find("li.pqitem");
 		$li.data("item", item);
 		let $text = $li.find("div.text");
-		$text.text(item.text)
+		$text.html(item.text)
 			.keydown((e) => {
 				if(e.which == ENTER) {
-					removeEditing($li);
-					e.preventDefault();
+					if(!e.shiftKey) {
+						removeEditing($li);
+						e.preventDefault();
+					}
+
 				}
 				e.stopPropagation();
 			});
@@ -472,7 +475,7 @@ function initView() {
 		activeList.elements
 			.filter(e => e.status != ARCHIVED && e.status != DELETED)
 			.forEach(li => {
-				$addButton.before(toHtml(li));
+				$addButton.before(createPQItem(li));
 			});
 	}
 	function renderName() {
@@ -538,7 +541,7 @@ function initView() {
 		let $text = $li.children(".text");
 		if($text.length > 0) {
 			$text.attr("contenteditable", "false");
-			syncText($li, $text.text());
+			syncText($li, $text.html());
 		}
 		if($li.is("[contenteditable]")) {
 			$li.attr("contenteditable", "false");

@@ -78,7 +78,7 @@ function setEditedFlag() {
 function startSaving() {
 	window.setInterval(() => {
 		let now = Date.now();
-		if(__edited && now - lastEdit > 5000 && !view.isEditing() && !loading) {
+		if(__edited && now - lastEdit > 5000 && !view.isEditing()) {
 			save();
 		}
 	}, 1000);
