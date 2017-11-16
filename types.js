@@ -6,6 +6,16 @@ const COMPLETE = "complete";
 const DELETED = "deleted";
 const ARCHIVED = "archived";
 
+function toggle(status) {
+	if(status == INCOMPLETE) {
+		return COMPLETE;
+	}
+	if(status == COMPLETE) {
+		return INCOMPLETE;
+	}
+	return null;
+}
+
 Array.prototype.move = function(item, i) {
 	let index = this.indexOf(item);
 	if(index == -1) {

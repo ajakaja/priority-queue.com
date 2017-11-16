@@ -39,7 +39,7 @@ function initView() {
 	let toggleModal = () => {$modal.toggleClass("hidden")};
 
 	$("#dropbox-auth").attr("href", fs.getAuthLink());
-	$modal.click((e) => {
+	$modal.click(e => {
 		if($(e.target).is($modal)) {
 			toggleModal();
 			setHint("you have to log in...");
@@ -67,7 +67,7 @@ function initView() {
 		setupDrag();
 		setupHotkeys();
 
-		$(document).mousedown((e) => {
+		$(document).mousedown(e => {
 			setAsEditing(null);
 			setSelection(null);
 			$(".open").removeClass("open");
@@ -79,7 +79,7 @@ function initView() {
 			$name.attr("contenteditable", "true");
 			selectText($name);
 			$name.addClass("editing");
-		}).keydown((e) => {
+		}).keydown(e => {
 			if($name.hasClass("editing")) {
 				if(e.which == ENTER) {
 					e.preventDefault();
@@ -94,7 +94,7 @@ function initView() {
 			}
 		});
 		$save.click(save);
-		$newfile.keydown((e) => {
+		$newfile.keydown(e => {
 			if(e.which == ENTER) {
 				let validname = validFilename($newfile.text());
 				if(!!validname) {
@@ -111,7 +111,7 @@ function initView() {
 			}
 			e.stopPropagation();
 		});
-		$filename.mousedown((e) => {
+		$filename.mousedown(e => {
 			$filemenu.toggleClass("open");
 			return false;
 		});
@@ -152,11 +152,11 @@ function initView() {
 			}
 			e.stopPropagation();
 		});
-		$li.mousedown((e) => {
+		$li.mousedown(e => {
 			openFile(getText($li));
 			return false;
 		}).hover(() => $li.addClass("hover"), () => $li.removeClass("hover"));
-		$li.find("div.edit").mousedown((e) => {
+		$li.find("div.edit").mousedown(e => {
 			setAsEditing($li);
 			$filemenu.addClass("open");
 			return false
@@ -164,19 +164,19 @@ function initView() {
 		let $delete = $li.find("div.delete"),
 			$cancel = $li.find("div.cancel"),
 			$confirm = $li.find("div.confirm");
-		$delete.mousedown((e) => {
+		$delete.mousedown(e => {
 			$confirm.removeClass("hidden");	
 			$cancel.removeClass("hidden");		
 			$delete.addClass("hidden");
 			setSelection($li);
 			return false;
 		});
-		$confirm.mousedown((e) => {
+		$confirm.mousedown(e => {
 			deleteFile(getText($li))
 				.then(() => $li.detach());
 			return false;
 		});
-		$cancel.mousedown((e) => {
+		$cancel.mousedown(e => {
 			$confirm.addClass("hidden");	
 			$cancel.addClass("hidden");		
 			$delete.removeClass("hidden");
@@ -185,150 +185,149 @@ function initView() {
 		return $li;
 	}
 
-
 	function createPQItem(item) {
 		const $clone = $(document.importNode(rowtemplate.content, true));
 		let $li = $clone.find("li.pqitem");
 		$li.data("item", item);
 		let $text = $li.find("div.text");
-		$text.html(item.text)
-			.keydown((e) => {
-				if(e.which == ENTER) {
-					if(!e.shiftKey) {
-						removeEditing($li);
-						e.preventDefault();
-					}
-
-				}
-				e.stopPropagation();
-			});
-		$li.hover(() => $li.addClass("hover"), () =>  $li.removeClass("hover"))
-			.mousedown(e => {
-				holdStart = Date.now();
-				let time = holdStart;
-				//if we hold for more than holdTime, set as editing.
-				window.setTimeout(() => {
-					if(holdStart == time) { //if no one has changed holdStart
-						setAsEditing($li);
-					}
-				}, holdTime);
-			 	if(hints.selection) {
-					setHint("(click and hold to edit)", false);
-				}
-				e.stopPropagation();
-			}).mouseup(e => {
-				let now = Date.now();
-				if(now - holdStart < holdTime) {
-					if($li.hasClass("editing")) {
-						setAsEditing($li);
-					} else if(item.status == INCOMPLETE) {
-						setStatus($li, COMPLETE);
-						setSelection($li);
-					} else if(item.status == COMPLETE) {
-						setStatus($li, INCOMPLETE);
-						setSelection($li);
-					}
-				}
-				holdStart = null;
-				return false;
-			})
-			.click(() => false );
+		$li.find("div.text").html(item.text)
+			.keydown(editHandler);
 		renderStatus($li, item.status, item.priority);
+
+		$li.hover(() => $li.addClass("hover"), () =>  $li.removeClass("hover"))
+			.mousedown(mousedownHandler)
+			.mouseup(mouseupHandler)
+			.click(() => false);
 		$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
-		$li.find("div.edit").mousedown((e) => {
-				setAsEditing($li);
-				return false;
-			});
-		$li.find("div.close").mousedown((e) => {
-			remove($li);
-			return false;
-		});
-		$li.find("div.check").mousedown((e) => {
-			if(item.status == INCOMPLETE) {
-				setStatus($li, COMPLETE);
-			} else if(item.status == COMPLETE) {
-				setStatus($li, INCOMPLETE);
-			}
-			return false;
-		});
-		$li.find("div.urgent").mousedown((e) => {
-			e.stopPropagation();
-			let $first = $("li.pqitem").first();
-			if(!$li.is($first)) {
-				let priority = getPriority($first) - randInt(1, 5);
-				setPriority($li, priority);
-				$li.detach().insertBefore($first);
-			}
-			return false;
-		});
-		addDrag($li);
+		$li.on("dragstart", dragstartHandler) //fired when this $li starts dragging
+		   	.on("dragover", dragoverHandler) //fired when anything else is dragging over this $li
+		   	.on("dragleave", e => e.preventDefault()) //have to prevent default to allow dropping.
+			.on("dragenter", dragenterHandler);//fired by the element we drag OVER
 		return $li;
 	} 
 
-	function addDrag($li) {
-		$li.on("dragstart", (e) => {
-			let $target = $(e.target);
-			$target.addClass("dragging");
-			holdStart = null;
-			$dragging = $li;
-			$dragClone = $li.clone();
-			let dt = e.originalEvent.dataTransfer;
-			dt.setData("text/html", $li);
-			dt.effectAllowed = "move";
-			dt.dropEffect = "move";
-			window.setTimeout(() => {
-				$("#trash").addClass("shown"); //can't reflow while dragging
-			}, 10);
-
-		}).on("dragend", (e) => {
-
-		}).on("dragover", (e) => {
+	function editHandler(e) {
+		if(e.which == ENTER && !e.shiftKey) {
+			removeEditing($li);
 			e.preventDefault();
-			let $target = $(e.originalEvent.target).closest("li.pqitem");
-			if(!$target.length) {
-				return;
+		}
+		e.stopPropagation();
+	}
+
+	function mousedownHandler(e) {
+		let $target = $(e.target);
+		let $this = $(this);
+		if($target.is("div.edit")) {
+			setAsEditing($this);
+			return false;
+		}
+		if($target.is("div.check")) {
+			let data = $li.data("item");
+			setStatus($this, toggle(data.status));
+			return false;
+		}
+		if($target.is("div.close")) {
+			remove($this);
+			return false;
+		}
+		if($target.is("div.urgent")) {
+			let $first = $("li.pqitem").first();
+			if(!$this.is($first)) {
+				let priority = getPriority($first) - randInt(1, 5);
+				setPriority($this, priority);
+				$this.detach().insertBefore($first);
 			}
-			if(!$target.is($dragging)) {
-				const mid = $target.offset().top + $target.height()/2;
-				const mouseY = e.clientY;
-				if(mouseY > mid && $target.prev().is($dragClone)) {
-					$dragClone.detach();
+			return false;
+		}
+
+		holdStart = Date.now();
+		let time = holdStart;
+		//if we hold for more than holdTime, set as editing.
+		window.setTimeout(() => {
+			if(holdStart == time) { //if no one has changed holdStart
+				setAsEditing($this);
+			}
+		}, holdTime);
+	 	if(hints.selection) {
+			setHint("(click and hold to edit)", false);
+		}
+		e.stopPropagation();
+	}
+
+	function mouseupHandler(e) {
+		let now = Date.now();
+		let $this = $(this);
+		if(now - holdStart < holdTime) {
+			if($this.hasClass("editing")) {
+				setAsEditing($this);
+			} else {
+				let data = $this.data("item");
+				setStatus($this, toggle(data.status));
+			}
+		}
+		holdStart = null;
+		return false;
+	}
+
+	function dragstartHandler(e) {
+		let $target = $(e.target);
+		$target.addClass("dragging");
+		holdStart = null;
+		$dragging = $(e.target);
+		$dragClone = $dragging.clone();
+		let dt = e.originalEvent.dataTransfer;
+		dt.effectAllowed = "move";
+		dt.dropEffect = "move";
+		window.setTimeout(() => {
+			$trash.addClass("shown"); //can't reflow while dragging
+		}, 10);
+	}
+
+	function dragoverHandler(e) {
+		e.preventDefault();
+		let $target = $(e.target).closest("li.pqitem");
+		if(!$target.length) {
+			return;
+		}
+		if(!$target.is($dragging)) {
+			const mid = $target.offset().top + $target.height()/2;
+			const mouseY = e.clientY;
+			if(mouseY > mid && $target.prev().is($dragClone)) {
+				$dragClone.detach();
+				$target.after($dragClone);
+				setPriority($dragClone, getPriority($target) + 1);
+			} else if(mouseY <= mid && $target.next().is($dragClone)) {
+				$dragClone.detach();
+				$target.before($dragClone);
+				setPriority($dragClone, getPriority($target) - 1);
+			}
+		}
+	}
+
+	function dragenterHandler(e) {
+		e.preventDefault(); //have to prevent default to allow dropping.
+		let $target = $(e.target).closest("li.pqitem");
+		if(!$target.length) {
+			return;
+		}
+		$dragClone.detach();
+		if(!$target.is($dragging)) {
+			const mid = $target.offset.top + $target.height/2;
+			const mouseY = e.clientY;
+			if(mouseY > mid) {
+				if(!$target.next().is($dragging)) {
 					$target.after($dragClone);
+					$dragging.detach();
 					setPriority($dragClone, getPriority($target) + 1);
-				} else if(mouseY <= mid && $target.next().is($dragClone)) {
-					$dragClone.detach();
+				}
+			} else {
+				if(!$target.prev().is($dragging)) {
 					$target.before($dragClone);
+					$dragging.detach();
 					setPriority($dragClone, getPriority($target) - 1);
 				}
 			}
-		}).on("dragleave", (e) => {
-			e.preventDefault(); //have to prevent default to allow dropping.
-		}).on("dragenter", (e) => {
-			e.preventDefault(); //have to prevent default to allow dropping.
-			//fired by the element we drag OVER
-			let $target = $(e.originalEvent.target).closest("li.pqitem");
-			if(!$target.is($("li.pqitem"))) { //in case events fire from children
-				return;
-			}
-			$dragClone.detach();
-			if(!$target.is($dragging)) {
-				const mid = $target.offset.top + $target.height/2;
-				const mouseY = e.clientY;
-				if(mouseY > mid) {
-					if(!$target.next().is($dragging)) {
-						$target.after($dragClone);
-						$dragging.detach();
-						setPriority($dragClone, getPriority($target) + 1);
-					}
-				} else {
-					if(!$target.prev().is($dragging)) {
-						$target.before($dragClone);
-						$dragging.detach();
-						setPriority($dragClone, getPriority($target) - 1);
-					}
-				}
-			}
-		});
+		}
 	}
 
 	function setupDrag() {
@@ -339,23 +338,23 @@ function initView() {
 				y >= o.top &&
 				y <= o.top + $e.height();
 		}
-		$trash.on("dragenter", (e) => {
+		$trash.on("dragenter", e => {
 			e.preventDefault();
 			if(inside(e.clientX, e.clientY, $trash)) {
 				$trash.addClass("hover");
 			}
-		}).on("dragover", (e) => {
+		}).on("dragover", e => {
 			e.preventDefault();
-		}).on("dragleave", (e) => {
+		}).on("dragleave", e => {
 			e.preventDefault();
 			if(!inside(e.clientX, e.clientY, $trash)) {
 				$trash.removeClass("hover");
 			}
 		});
 		$(document)
-			.on("dragover", (e) => {e.preventDefault(); })
-			.on("dragenter", (e) => {e.preventDefault(); })
-			.on("drop", (e) => {
+			.on("dragover", e => {e.preventDefault(); })
+			.on("dragenter", e => {e.preventDefault(); })
+			.on("drop", e => {
 			e.preventDefault();
 			if(inside(e.clientX, e.clientY, $trash)) {
 				remove($dragging);
@@ -404,7 +403,7 @@ function initView() {
 	}
 
 	function setupHotkeys() {
-		$(document).keydown((e) => {
+		$(document).keydown(e => {
 			let $selection = $("li.selected");
 			let $li;
 			switch (e.which) {
