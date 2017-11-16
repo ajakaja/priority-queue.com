@@ -155,7 +155,7 @@ function initView() {
 		$li.mousedown(e => {
 			openFile(getText($li));
 			return false;
-		}).hover(() => $li.addClass("hover"), () => $li.removeClass("hover"));
+		});
 		$li.find("div.edit").mousedown(e => {
 			setAsEditing($li);
 			$filemenu.addClass("open");
@@ -185,6 +185,61 @@ function initView() {
 		return $li;
 	}
 
+
+	function renderName() {
+		$name.text(activeList.title);
+		if(activeList.filename) {
+			$filename.text(activeList.filename);
+		}
+		for(let i of fileList) {
+			createFileItem(i).appendTo($files);
+		}
+	}
+	function unrender() {
+		$("li.pqitem").remove();
+		$("li.fileitem").remove();
+		$filename.text("");
+		$name.text("");
+	}
+
+	function renderList() {
+		$name.text(activeList.title);
+		$filename.text(activeList.filename);
+		$("li.pqitem").remove();
+		//optional: .detach() and cache for faster file switching?
+		activeList.elements
+			.filter(e => e.status != ARCHIVED && e.status != DELETED)
+			.forEach(li => {
+				$addButton.before(createPQItem(li));
+			});
+	}
+	function rerenderList() {
+		let $lis = $("li.pqitem");
+		let statuses = [COMPLETE, INCOMPLETE];
+
+		let changedPriority = false;
+		$lis.each((i, li) => {
+			let $li = $(li);
+			let item = $li.data("item");
+			if(item.edited) {
+				$li.find("div.text").html(item.text);
+				renderStatus($li, item.status);
+				if(getPriority($li) != item.priority) {
+					renderPriority($li, item.status, item.priority);
+					changedPriority = true;
+				}
+				$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
+			}
+		});
+		if(changedPriority) {
+			$lis = $lis.sort( (a, b) => getPriority($(a)) - getPriority($(b)))
+		}
+		$lis.detach()
+			.filter((i, e) => statuses.includes(getStatus($(e))))
+			.insertBefore($addButton);
+	}
+	
+
 	function createPQItem(item) {
 		const $clone = $(document.importNode(rowtemplate.content, true));
 		let $li = $clone.find("li.pqitem");
@@ -192,13 +247,13 @@ function initView() {
 		let $text = $li.find("div.text");
 		$li.find("div.text").html(item.text)
 			.keydown(editHandler);
-		renderStatus($li, item.status, item.priority);
+		renderStatus($li, item.status);
+		renderPriority($li, item.status, item.priority);
+		$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
 
-		$li.hover(() => $li.addClass("hover"), () =>  $li.removeClass("hover"))
-			.mousedown(mousedownHandler)
+		$li.mousedown(mousedownHandler)
 			.mouseup(mouseupHandler)
 			.click(() => false);
-		$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
 		$li.on("dragstart", dragstartHandler) //fired when this $li starts dragging
 		   	.on("dragover", dragoverHandler) //fired when anything else is dragging over this $li
 		   	.on("dragleave", e => e.preventDefault()) //have to prevent default to allow dropping.
@@ -208,7 +263,8 @@ function initView() {
 
 	function editHandler(e) {
 		if(e.which == ENTER && !e.shiftKey) {
-			removeEditing($li);
+			let $target = $(this).closest("li.pqitem");
+			removeEditing($target);
 			e.preventDefault();
 		}
 		e.stopPropagation();
@@ -474,29 +530,6 @@ function initView() {
 		});
 	}
 
-	function renderList() {
-		unrender();
-		activeList.elements
-			.filter(e => e.status != ARCHIVED && e.status != DELETED)
-			.forEach(li => {
-				$addButton.before(createPQItem(li));
-			});
-	}
-	function renderName() {
-		$name.text(activeList.title);
-		if(activeList.filename) {
-			$filename.text(activeList.filename);
-		}
-		for(let i of fileList) {
-			createFileItem(i).appendTo($files);
-		}
-	}
-	function unrender() {
-		$("li.pqitem").remove();
-		$("li.fileitem").remove();
-		$filename.text("");
-		$name.text("");
-	}
 	function setAsEditing($li) {
 		$(".editing").each((i, e) => {
 			let $e = $(e)
@@ -514,7 +547,7 @@ function initView() {
 		}
 	}
 
-	function renderStatus($li, status, priority) {
+	function renderStatus($li, status) {
 		if(status == COMPLETE) {
 			$li.removeClass(INCOMPLETE);
 			$li.addClass(COMPLETE);
@@ -522,10 +555,9 @@ function initView() {
 			$li.removeClass(COMPLETE);
 			$li.addClass(INCOMPLETE);
 		}
-		renderPriority($li, priority, status);
 	}
 
-	function renderPriority($li, priority, status) {
+	function renderPriority($li, status, priority) {
 		if(status == COMPLETE) {
 			$li.find(".pqpriority").text("✔");
 		} else {
@@ -536,8 +568,8 @@ function initView() {
 		let item = $li.data("item");
 		if(item.status != status) {
 			set(item, "status", status);
-			renderStatus($li, status, item.priority);
 		}
+		renderStatus($li, status, item.priority);
 	}
 	function removeEditing($li) {
 		$li.removeClass("editing");
@@ -602,16 +634,19 @@ function initView() {
 	}
 	function setPriority($li, priority) {
 		if($li === $dragClone) {
-			renderPriority($li, priority, null);
+			renderPriority($li, null, priority);
 			return
 		} else {
 			let item = $li.data("item");
 			set(item, "priority", priority);
-			renderPriority($li, priority, item.status);
+			renderPriority($li, item.status, priority);
 		}
 	}
 	function getText($li) {
 		return $li.find("div.text").text();
+	}
+	function getHtml($li) {
+		return $li.find("div.text").html();
 	}
 	function remove($li) {
 		let item = $li.data("item");
@@ -644,7 +679,6 @@ function initView() {
 	return {
 		toggleLoader: toggleLoader,
 		render(loggedIn=true) {
-			unrender();
 			if(loggedIn) {
 				if(activeList) {
 					renderList();
@@ -652,8 +686,12 @@ function initView() {
 					window.location.hash = activeList.filename;
 				}
 			} else {
+				unrender();
 				toggleModal();
 			}
+		},
+		update() {
+			rerenderList();
 		},
 		setHint(text, repeat) {
 			setHint(text, repeat);

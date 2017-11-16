@@ -159,14 +159,14 @@ li.fileitem {
 }
 li.fileitem div.edit {
 	margin-left: auto;
-	opacity: 0.0;
 }
-li.fileitem div.delete {
+li.fileitem div.button {
 	opacity: 0.0;
+	transition: opacity 0.5s;
 }
-li.fileitem.hover div.edit,
-li.fileitem.hover div.delete {
+li.fileitem:hover div.button {
 	opacity: 0.5;
+	transition: opacity 0.5s;
 }
 div.hidden {
 	display: none;
@@ -391,13 +391,15 @@ div.text {
 
 div.button {
 	padding: 0px 4px 0px 4px;
-	opacity: 0.0;
-	transition: opacity 0.5s;
 }
 div.urgent {
 	font-weight: bold;
 }
-.pqitem.hover:not(.selected) div.button {
+.pqitem div.button {
+	opacity: 0.0;
+	transition: opacity 0.5s;
+}
+.pqitem:hover div.button {
 	opacity: 0.5;
 	transition: opacity 0.5s;
 }

@@ -196,6 +196,10 @@ function apply(delta) {
 	history = activeList.deltas.push(delta);
 	delta.apply();
 	setEditedFlag();
+	if(history.length > 200) {
+		history = 100;
+		activeList.deltas.splice(history);
+	}
 }
 
 function undo() {
@@ -208,7 +212,7 @@ function undo() {
 	history--;
 	activeList.deltas[history].undo();
 	setEditedFlag();
-	view.render();
+	view.update();
 }
 function redo() {
 	if(sequence != null) {
@@ -218,7 +222,7 @@ function redo() {
 		return;
 	}
 	activeList.deltas[history].apply();
-	view.render();
+	view.update();
 	setEditedFlag();
 	history++;
 }
@@ -230,7 +234,7 @@ function archiveCompleted() {
 		set(el, "status", ARCHIVED);
 	}
 	endSequence();
-	view.render();
+	view.update();
 }
 
 function deleteCompleted() {
@@ -240,7 +244,7 @@ function deleteCompleted() {
 		set(el, "status", DELETED);
 	}
 	endSequence();
-	view.render();
+	view.update();
 }
 function resetPriorities() {
 	startSequence();
@@ -253,5 +257,5 @@ function resetPriorities() {
 		}
 	}
 	endSequence();
-	view.render();
+	view.update();
 }
