@@ -62,8 +62,8 @@ function serialize(list) {
 		if(el.status == DELETED || el.status == ARCHIVED) {
 			continue;
 		}
-		if(!el.edited && el.cached) {
-			ret += el.cached + "\n";
+		if(!el.__edited && el.__cached) {
+			ret += el.__cached + "\n";
 		} else {
 			switch(el.status) {
 				case INCOMPLETE:
@@ -80,10 +80,14 @@ function serialize(list) {
 	let archived = list.elements.filter(e => e.status == ARCHIVED);
 	if(archived.length > 0) {
 		ret += "\nArchived:\n";
+		archived.sort((a,b) => {
+			return a.date - b.date;
+		});
+		for(let el of archived) {
+			ret += `* ${el.text} [${getAge(el.date)}]\n`;
+		}
 	}
-	for(let el of archived) {
-		ret += `* ${el.text} [${getAge(el.date)}]\n`;
-	}
+
 	return ret;
 }
 
@@ -143,7 +147,7 @@ function deserialize(text, lastmodified) {
 			errors.push(`Could not make sense of line #${i}: '${line}'.`);
 		}
 		if(entry) {
-			entry.cached = line;
+			entry.__cached = line;
 			data.elements.push(entry);
 		}
 		i++;
@@ -162,7 +166,7 @@ function deserialize(text, lastmodified) {
 			} else if(ENTRY_ARCHIVE.test(line)) {
 				let [_, text, age] = line.match(ENTRY_ARCHIVE);
 				entry = new ListItem(text.trim(), null, getDateBefore(age, lastmodified), ARCHIVED);
-				entry.cached = line;
+				entry.__cached = line;
 				data.elements.push(entry);
 			} else {
 				errors.push(`Could not make sense of line #${i}: '${line}'.`);

@@ -239,12 +239,12 @@ function initView() {
 		$lis.each((i, li) => {
 			let $li = $(li);
 			let item = $li.data("item");
-			if(item.edited) {
+			if(item.__edited) {
 				$li.find("div.text").html(item.text);
-				renderStatus($li, item.status);
-				if(getPriority($li) != item.priority) {
+				changedPriority = (getPriority($li) != item.priority);
+				if(changedPriority || !$li.hasClass(item.status)) {
+					renderStatus($li, item.status);
 					renderPriority($li, item.status, item.priority);
-					changedPriority = true;
 				}
 				$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
 			}
@@ -299,7 +299,7 @@ function initView() {
 			return false;
 		}
 		if($target.is("div.check")) {
-			let data = $li.data("item");
+			let data = $this.data("item");
 			setStatus($this, toggle(data.status));
 			return false;
 		}
@@ -339,7 +339,8 @@ function initView() {
 		}
 		if(now - holdStart < holdTime) {
 			if($this.hasClass("editing")) {
-				setAsEditing($this);
+				e.stopPropagation();
+				return;
 			} else {
 				if(e.shiftKey) {
 					setSelection($this);
@@ -589,7 +590,6 @@ function initView() {
 				removeEditing($e);
 			}
 		});
-		$name.removeClass("editing");
 		if($li && !$li.hasClass("editing")) {
 			const $text = $li.children(".text");
 			$text.attr("contenteditable", "true");
@@ -759,7 +759,9 @@ function initView() {
 		},
 		isEditing() {
 			return $(".editing").length > 0;
+		},
+		toggleSaving() {
+			$save.toggleClass("saving");
 		}
-		
 	}
 }

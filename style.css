@@ -95,9 +95,6 @@ p.indent {
 #listname {
 	color: #eee;
 	padding: 5px;
-	min-width: 50px;
-}
-#listname.editing {
 }
 #filemenu {
 	margin-left: auto;
@@ -264,20 +261,39 @@ li.fileitem.selected div.button {
 #save {
 	text-align: right;
 	width: 30px;
-	opacity: 0.2;
 	cursor: pointer;
 	visibility: hidden;
+}
+.spinner {
+	margin: 5% auto;
+	height: 15px;
+	width: 15px;
+	border: 3px solid #ccc;
+	border-right-color: #555;
+	border-top-color: #555;
+	border-radius: 100%;
+	animation: spin 1600ms infinite linear;
 }
 #save.shown {
 	visibility: visible;
 }
 #save svg {
+	opacity: 0.2;
 	width: 30px;
 }
-#save:hover {
+#save.saving svg {
+	display: none;
+}
+#save.saving .spinner {
+	display: block;
+}
+#save:not(.saving) .spinner {
+	display: none;
+}
+#save:hover svg {
 	opacity: 0.9;
 }
-#save.edited {
+#save.edited svg {
 	opacity: 0.7;
 }
 #settingsbutton {
@@ -367,6 +383,7 @@ li.pqitem {
 	flex-direction: row;
 	align-items: center;
 	justify-content: space-between;
+	cursor: pointer;
 }
 .pqitem.complete div.text {
 	text-decoration: line-through;
@@ -476,4 +493,26 @@ div.urgent {
 }
 li.highlight.incomplete div.pqpriority {
   animation: blink 0.2s step-start 0s 2;
+}
+
+
+@-webkit-keyframes "spin" {
+  from {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+            transform: rotate(359deg);
+  }
+}
+@keyframes "spin" {
+  from {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+            transform: rotate(359deg);
+  }
 }

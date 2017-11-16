@@ -8,6 +8,8 @@ let activeList = null;
 let fs = null;
 let view;
 
+let saving = false;
+
 $(() => init());
 
 async function init() {
@@ -70,9 +72,15 @@ let lastEdit = null;
 let __edited = false;
 
 function setEditedFlag() {
-	view.setEdited(true);
-	__edited = true;
-	lastEdit = Date.now();
+	if(deltasSinceSave != 0) {
+		view.setEdited(true);
+		__edited = true;
+		lastEdit = Date.now();
+	} else {
+		view.setEdited(false);
+		__edited = false;
+	}
+
 }
 
 function startSaving() {
@@ -85,11 +93,15 @@ function startSaving() {
 }
 
 async function save() {
+	saving = true;
+	view.toggleSaving();
 	__edited = false;
 	activeList.lastmodified = new Date();
 	await fs.save(activeList);
+	deltasSinceSave = 0;
 	view.setEdited(false);
 	view.setHint("saved");
+	view.toggleSaving();
 }
 
 async function openFile(filename, create=false) {
@@ -166,13 +178,11 @@ function logout() {
 
 let history = 0;
 let sequence = null;
+let deltasSinceSave = 0;
 
 function set(obj, key, value) {
 	let oldvalue = obj[key];
-	let delta = new Delta(i => obj[key] = value, i => obj[key] = oldvalue);
-	if(obj.edited === false) {
-		obj.edited = true;
-	}
+	let delta = new SetDelta(obj, key, value, oldvalue);
 	if(sequence) {
 		sequence.add(delta);
 	} else {
@@ -193,8 +203,20 @@ function apply(delta) {
 	if(history != activeList.deltas.length) {
 		activeList.deltas.splice(history);
 	}
+	if(deltasSinceSave < 0) {
+		deltasSinceSave = NaN;
+	}
+	if(delta.undoes && activeList.deltas.length > 0) {
+		//if we toggle a value and then toggle it back, just undo the first one. saves us a lot of saves.
+		if(delta.undoes(activeList.deltas[history - 1])) {
+			undo();
+			view.setHint("(undone)");
+			return;
+		}
+	} 
 	history = activeList.deltas.push(delta);
 	delta.apply();
+	deltasSinceSave++;
 	setEditedFlag();
 	if(history.length > 200) {
 		history = 100;
@@ -211,6 +233,8 @@ function undo() {
 	}
 	history--;
 	activeList.deltas[history].undo();
+	//if we go below zero, we can redo back to where we were, but if we do something else we set to NaN to stop.
+	deltasSinceSave--;
 	setEditedFlag();
 	view.update();
 }
@@ -222,9 +246,10 @@ function redo() {
 		return;
 	}
 	activeList.deltas[history].apply();
-	view.update();
 	setEditedFlag();
 	history++;
+	deltasSinceSave++;
+	view.update();
 }
 
 function archiveCompleted() {

@@ -69,7 +69,7 @@ class ListItem {
 		this.priority = Number.parseInt(priority);
 		this.date = date;
 		this.status = status;
-		this.edited = edited;
+		this.__edited = edited;
 	}
 }
 
@@ -90,6 +90,33 @@ class Delta {
 	constructor(apply, undo) {
 		this.apply = apply;
 		this.undo = undo;
+	}
+}
+class SetDelta {
+	constructor(obj, property, newvalue) {
+		this.obj = obj;
+		this.property = property;
+		this.newvalue = newvalue;
+		this.oldvalue = obj[property]
+
+	}
+	undoes(other) {
+		if(other instanceof SetDelta) {
+			return this.obj == other.obj &&
+				this.property == other.property &&
+				this.newvalue == other.oldvalue &&
+				this.oldvalue == other.newvalue;
+		}
+		return false;
+	}
+
+	apply() {
+		this.obj[this.property] = this.newvalue;
+		this.obj.__edited = true;
+	}
+	undo() { 
+		this.obj[this.property] = this.oldvalue;
+		this.obj.__edited = true;
 	}
 }
 
