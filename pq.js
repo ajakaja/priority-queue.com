@@ -18,6 +18,7 @@ async function init() {
 	}
 	fs = initializeDropbox();
 	view = initView();
+	view.toggleLoader();
 	if(!fs.isAuthed()) {
 		view.render(false);
 		return;
@@ -26,33 +27,44 @@ async function init() {
 		setHint("Could not log in. Sorry.");
 		return;
 	}
-	view.toggleLoader();
 	fileList = await fs.list();
-	let newb = false;
 	if(fileList.length == 0) {
 		let data = sampleData();
 		await fs.create(data);
 		fileList = [data.filename];
-		newb = true;
-	}
-	let lastOpen = Cookies.get(LAST_OPEN_COOKIE)
-	let filename;
-	if(lastOpen && fileList.includes(lastOpen)) {
-		filename = lastOpen;
-	} else {
-		filename = fileList[0];
-		Cookies.set(LAST_OPEN_COOKIE, filename);
-	}
-	let [data, errors] = await fs.load(filename);
-	activeList = data;
-	files[filename] = data;
-	view.render();
-	startSaving();
-	view.toggleLoader();
-	if(newb) {
 		view.setHint("click and hold to edit", false);
 	}
+	view.toggleLoader();
+	let filename;
+	{
+		let lastOpen = Cookies.get(LAST_OPEN_COOKIE)
+		let hash = getHash();
+		if(hash && fileList.includes(hash)) {
+			filename = hash;
+		} else if(lastOpen && fileList.includes(lastOpen)) {
+			filename = lastOpen;
+		} else {
+			filename = fileList[0];
+		}
+	}
+	await openFile(filename, false);
+	startSaving();
+	window.onhashchange = e => {
+		let hash = getHash();
+		if(hash && activeList.filename != hash && fileList.includes(hash)) {
+			openFile(hash, false);
+		}
+	};
 };
+
+function getHash() {
+	let hash = window.location.hash;
+	if(hash && hash.length > 0) {
+		return hash.substring(1);
+	} else {
+		return null;
+	}
+}
 
 let lastEdit = null;
 let __edited = false;
@@ -66,7 +78,7 @@ function setEditedFlag() {
 function startSaving() {
 	window.setInterval(() => {
 		let now = Date.now();
-		if(__edited && now - lastEdit > 5000 && !view.isEditing()) {
+		if(__edited && now - lastEdit > 5000 && !view.isEditing() && !loading) {
 			save();
 		}
 	}, 1000);
@@ -98,8 +110,8 @@ async function openFile(filename, create=false) {
 		activeList = data;
 		history = data.deltas.length;
 		view.render();
+		Cookies.set(LAST_OPEN_COOKIE, filename);
 	}
-	Cookies.set(LAST_OPEN_COOKIE, filename);
 	view.toggleLoader();
 }
 

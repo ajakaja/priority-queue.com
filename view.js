@@ -642,6 +642,7 @@ function initView() {
 				if(activeList) {
 					renderList();
 					renderName();
+					window.location.hash = activeList.filename;
 				}
 			} else {
 				toggleModal();
