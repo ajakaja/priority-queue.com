@@ -332,32 +332,34 @@ function initView() {
 	}
 
 	function setupDrag() {
+		let inside = (x, y, $e) => {
+			let o = $e.offset();
+			return x >= o.left &&
+				x <= o.left + $e.width() &&
+				y >= o.top &&
+				y <= o.top + $e.height();
+		}
 		$trash.on("dragenter", (e) => {
 			e.preventDefault();
-			let $target = $(e.originalEvent.target);
-			if(!$target.is($("$trash"))) {
-				return;
+			if(inside(e.clientX, e.clientY, $trash)) {
+				$trash.addClass("hover");
 			}
-			$target.addClass("hover");
 		}).on("dragover", (e) => {
 			e.preventDefault();
 		}).on("dragleave", (e) => {
 			e.preventDefault();
-			let $target = $(e.originalEvent.target);
-			if(!$target.is($("$trash"))) {
-				return;
+			if(!inside(e.clientX, e.clientY, $trash)) {
+				$trash.removeClass("hover");
 			}
-			$target.removeClass("hover");
 		});
 		$(document)
 			.on("dragover", (e) => {e.preventDefault(); })
 			.on("dragenter", (e) => {e.preventDefault(); })
 			.on("drop", (e) => {
 			e.preventDefault();
-			let $target = $(e.originalEvent.target);
-			if($target.is($trash)) {
-				$dragClone.remove();
+			if(inside(e.clientX, e.clientY, $trash)) {
 				remove($dragging);
+				$dragClone.remove();
 			} else if($dragClone) {
 				if($dragClone.parent().length > 0) {
 					$dragging.detach();
