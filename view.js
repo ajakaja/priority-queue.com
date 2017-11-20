@@ -143,7 +143,7 @@ function initView() {
 			$("#modal-about").removeClass("hidden");
 			toggleModal();
 		});
-		if(Cookies.get(COLOR_COOKIE)) {
+		if(Cookies.get(COLOR_COOKIE) == "true") {
 			colors = true;
 		}
 	}
@@ -161,11 +161,11 @@ function initView() {
 		if(colors) {
 			colors = false;
 			renderName();
-			Cookies.set(COLOR_COOKIE, false);
+			Cookies.set(COLOR_COOKIE, "false");
 		} else {
 			colors = true;
 			renderName();
-			Cookies.set(COLOR_COOKIE, true);
+			Cookies.set(COLOR_COOKIE, "true");
 		}
 	}
 

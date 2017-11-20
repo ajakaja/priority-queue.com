@@ -93,7 +93,7 @@ function serialize(list) {
 
 const ARCHIVE_HEADER = /^Archived:$/;
 
-const PRIORITY = /([0-9]+)\./.source;
+const PRIORITY = /(-?[0-9]+)\./.source;
 const ITEM = /\s?(.+)/.source;
 const AGE = /\s?(?:\[([0-9]+[a-z]+)\])/.source; //something of the form [5h] or [14m]
 
