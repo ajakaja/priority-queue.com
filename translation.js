@@ -8,7 +8,7 @@ function getAgeString(date, fluent=true) { //fluent: whether to make it more hum
 		return `${Math.round(diff)}s`;
 	if(diff < 60*60) 
 		return `${Math.round(diff / 60)}m`;
-	if(diff < 60*60*24*3)
+	if(diff < 60*60*24*2)
 		return `${Math.round(diff/(60*60))}h`;
 	if(diff < 60*60*24*7*2)
 		return `${Math.round(diff/(60*60*24))}d`;

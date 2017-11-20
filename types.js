@@ -63,6 +63,29 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
 
+let primes = [17, 31, 43, 71, 83, 101];
+
+function hashNines(str) {
+	let hash = 0, char;
+	for(let i = 0; i < str.length; i++) {
+		char = str.charCodeAt(i);
+		//each character cycles the range at a different speed.. ish
+		hash = (hash + char * primes[i % primes.length]) % 729;
+	}
+	return [hash % 9, Math.floor(hash / 9) % 9, Math.floor(hash / 81)];
+}
+
+function colorScheme(str) {
+	let hashes = hashNines(str);
+	let r = 100 + 15 * hashes[1];
+	let g = 100 + 15 * hashes[2];
+	let b = 100 + 15 * hashes[0];
+	let lightColor = `rgb(${r},${g},${b})`;
+	let lighterColor = `rgb(${r+20},${g+20},${b+20})`;
+	let darkColor = `rgb(${r-60},${g-60},${b-60})`;
+	return [lightColor, darkColor, lighterColor];
+}
+
 class ListItem {
 	constructor(text, priority, date, status, edited=false) {
 		this.text = text;

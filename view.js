@@ -17,7 +17,6 @@ function initView() {
 	const holdTime = 600;
 	var holdStart;
 
-	//a hack to work around the stupidity of the dragging API -- dragenter/dragleave/etc provide no reference to the object being dragged
 	var $dragging = null;
 	var $dragClone = null;
 
@@ -37,6 +36,10 @@ function initView() {
 	const $filemenu = $("#filemenu");
 	const $settings = $("#settings");
 
+	let colors = false;
+	const DEFAULT_COLORS = ["#9cc", "#699", "#abc"];
+	const COLOR_COOKIE = "colors";
+
 	let toggleLoader = () => $loader.toggleClass("hidden");
 
 	$("#dropbox-auth").attr("href", fs.getAuthLink());
@@ -52,8 +55,7 @@ function initView() {
 			let lastPriority;
 			let $last = $("li.pqitem").last();
 			if($last.length > 0) {
-				let variance = randInt(1, 5);
-				lastPriority = getPriority($last) + variance; 
+				lastPriority = getPriority($last) + randInt(1, 3);
 			} else {
 				lastPriority = 1;
 			}
@@ -99,7 +101,7 @@ function initView() {
 			if(e.which == ENTER) {
 				let validname = validFilename($newfile.text());
 				if(!!validname) {
-					let $li = createFileItem(validname);
+					let $li = createFileItem(c);
 					$li.appendTo($files);
 					$newfile.text("");
 					$filemenu.removeClass("open");
@@ -111,25 +113,60 @@ function initView() {
 				e.preventDefault();
 			}
 			e.stopPropagation();
+		}).mousedown(e => {
+			if(e.button != 0) {
+				$filemenu.addClass("open");
+				return false;
+			}
 		});
 		$filename.mousedown(e => {
+			$(".open").removeClass("open");
 			$filemenu.toggleClass("open");
 			return false;
 		});
 
 		$("#settingsbutton").mousedown(e => {
-			$("#settings").addClass("open");
+			if(e.button != 0) {
+				return false;
+			}
+			$(".open").removeClass("open");
+			$("#settings").toggleClass("open");
 			return false;
 		});
-		$("#logout").mousedown(logout);
-		$("#cleanup").mousedown(deleteCompleted);
-		$("#archive").mousedown(archiveCompleted);
-		$("#renumber").mousedown(resetPriorities);
-		$("#about").mousedown(() => {
+		createMenuButton("#logout", logout);
+		createMenuButton("#cleanup", deleteCompleted);
+		createMenuButton("#archive", archiveCompleted);
+		createMenuButton("#renumber", resetPriorities);
+		createMenuButton("#togglecolors", toggleColors);
+		createMenuButton("#about", () => {
 			$("#settings").removeClass("open");
 			$("#modal-about").removeClass("hidden");
 			toggleModal();
 		});
+		if(Cookies.get(COLOR_COOKIE)) {
+			colors = true;
+		}
+	}
+
+	function createMenuButton(id, fn) {
+		$(id).mousedown(e => {
+			if(e.button != 0) {
+				return false;
+			}
+			fn();
+		});
+	}
+
+	function toggleColors() {
+		if(colors) {
+			colors = false;
+			renderName();
+			Cookies.set(COLOR_COOKIE, false);
+		} else {
+			colors = true;
+			renderName();
+			Cookies.set(COLOR_COOKIE, true);
+		}
 	}
 
 	function toggleModal() {
@@ -146,6 +183,9 @@ function initView() {
 		const $clone = $(document.importNode(filetemplate.content, true));
 		let $li = $clone.find("li.fileitem");
 		setText($li, filename);
+		if(colors) {
+			$li.css("background-color", colorScheme(filename)[0]);
+		}
 		$li.data("filename", filename);
 		$li.find("div.text").keydown(e => {
 			if(e.which == ENTER) {
@@ -168,7 +208,12 @@ function initView() {
 			e.stopPropagation();
 		});
 		$li.mousedown(e => {
+			if(e.button != 0) {
+				$filemenu.addClass("open");
+				return false;
+			}
 			openFile(getText($li));
+			$filemenu.removeClass("open");
 			return false;
 		});
 		$li.find("div.edit").mousedown(e => {
@@ -203,6 +248,11 @@ function initView() {
 
 	function renderName() {
 		$name.text(activeList.title);
+		if(colors) {
+			setColors(activeList.filename);
+		} else {
+			setColors(null);
+		}
 		if(activeList.filename) {
 			$filename.text(activeList.filename);
 		}
@@ -224,12 +274,9 @@ function initView() {
 		$name.text(activeList.title);
 		$filename.text(activeList.filename);
 		$("li.pqitem").remove();
-		//optional: .detach() and cache for faster file switching?
 		activeList.elements
 			.filter(e => e.status != ARCHIVED && e.status != DELETED)
-			.forEach(li => {
-				$addButton.before(createPQItem(li));
-			});
+			.forEach(li => $addButton.before(createPQItem(li)));
 	}
 	function rerenderList() {
 		let $lis = $("li.pqitem");
@@ -241,7 +288,7 @@ function initView() {
 			let item = $li.data("item");
 			if(item.__edited) {
 				$li.find("div.text").html(item.text);
-				changedPriority = (getPriority($li) != item.priority);
+				changedPriority = (getPriorityText($li) != priorityText(item.priority));
 				if(changedPriority || !$li.hasClass(item.status)) {
 					renderStatus($li, item.status);
 					renderPriority($li, item.status, item.priority);
@@ -281,8 +328,11 @@ function initView() {
 
 	function editHandler(e) {
 		if(e.which == ENTER && !e.shiftKey) {
-			let $target = $(this).closest("li.pqitem");
-			removeEditing($target);
+			removeEditing($(this).closest("li.pqitem"));
+			e.preventDefault();
+		}
+		if(e.which == ESCAPE) {
+			removeEditing($(this).closest("li.pqitem"));
 			e.preventDefault();
 		}
 		e.stopPropagation();
@@ -310,7 +360,7 @@ function initView() {
 		if($target.is("div.urgent")) {
 			let $first = $("li.pqitem").first();
 			if(!$this.is($first)) {
-				let priority = getPriority($first) - randInt(1, 5);
+				let priority = getPriority($first);
 				setPriority($this, priority);
 				$this.detach().insertBefore($first);
 			}
@@ -434,6 +484,16 @@ function initView() {
 			e.preventDefault();
 			if(!inside(e.clientX, e.clientY, $trash)) {
 				$trash.removeClass("hover");
+			}
+		});
+		$addButton.on("dragenter dragover", e => {
+			if(!$addButton.prev().is($dragClone)) {
+				let $prev = $addButton.prev("li.pqitem");
+				if($prev.length && !$prev.is($dragging)) {
+					$dragClone.detach();
+					$addButton.before($dragClone);
+					setPriority($dragClone, getPriority($prev) + 1);
+				}
 			}
 		});
 		$(document)
@@ -568,6 +628,21 @@ function initView() {
 		});
 	}
 
+	function setColors(str) {
+		let colors;
+		if(str) {
+			colors = colorScheme(str);
+			$("#togglecolors").text("decolorize");
+		} else {
+			colors = DEFAULT_COLORS; 
+			$("#togglecolors").text("colorize!");
+		}
+		$("body").css("background-color", colors[0]);
+		$("#titlebar").css("background-color", colors[1]);
+		$("#fileselector").css("background-color", colors[2]);
+	}
+	window.setColors = setColors;
+
 	function swap($a, $b) {
 		let pA = getPriority($a);
 		let pB = getPriority($b);
@@ -610,11 +685,11 @@ function initView() {
 	}
 
 	function renderPriority($li, status, priority) {
-		if(status == COMPLETE) {
-			$li.find(".pqpriority").text("✔");
-		} else {
-			$li.find(".pqpriority").text(priority);
-		}
+		$li.find(".pqpriority").text(priorityText(status, priority));
+	}
+
+	function priorityText(status, priority) {
+		return (status == COMPLETE) ? "✔" : priority;
 	}
 	function setStatus($li, status) {
 		let item = $li.data("item");
@@ -678,9 +753,13 @@ function initView() {
 	}
 	function getPriority($li) {
 		if($li === $dragClone) {
-			return Number.parseInt($dragClone.find("div.pqpriority").text());
+			return getPriorityText($li);
 		}
 		return $li.data("item").priority;
+	}
+	function getPriorityText($li) {
+		let text = $li.find("div.pqpriority").text();
+		return text;
 	}
 	function getStatus($li) {
 		return $li.data("item").status;
