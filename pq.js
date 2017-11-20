@@ -10,9 +10,7 @@ let view;
 
 let saving = false;
 
-$(() => init());
-
-async function init() {
+$(() => {
 	if (!("content" in document.createElement("template"))) {
 		alert("your browser's too old for this. sorry. I made this for personal use"
 			+ " so I'm not really trying to make it work for everyone.");
@@ -23,8 +21,12 @@ async function init() {
 	view.toggleLoader();
 	if(!fs.isAuthed()) {
 		view.render(false);
-		return;
+	} else {
+		initLoggedIn();
 	}
+});
+
+async function initLoggedIn() {
 	if (!fs.isLoaded()) {
 		setHint("Could not log in. Sorry.");
 		return;
@@ -46,7 +48,7 @@ async function init() {
 		} else if(lastOpen && fileList.includes(lastOpen)) {
 			filename = lastOpen;
 		} else {
-			filename = fileList[0];
+			filename = fileList[randInt(0, fileList.length)];
 		}
 	}
 	await openFile(filename, false);
@@ -57,7 +59,7 @@ async function init() {
 			openFile(hash, false);
 		}
 	};
-};
+}
 
 function getHash() {
 	let hash = window.location.hash;
@@ -146,7 +148,7 @@ async function deleteFile(filename) {
 		files[filename] = null;
 		if(activeList.filename == filename) {
 			activeList = null;
-			view.render();
+			view.unrender();
 		}
 	}
 	view.toggleLoader();

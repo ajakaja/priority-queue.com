@@ -37,18 +37,42 @@ function initView() {
 	const $settings = $("#settings");
 
 	let colors = false;
-	const DEFAULT_COLORS = ["#9cc", "#699", "#abc"];
+	const DEFAULT_COLORS = ["#9cc", "#699", "#acc"];
 	const COLOR_COOKIE = "colors";
 
 	let toggleLoader = () => $loader.toggleClass("hidden");
 
-	$("#dropbox-auth").attr("href", fs.getAuthLink());
+	setupModal();
 
-	$modal.click(e => {
-		if($(e.target).is($modal)) {
+	function setupModal() {
+		$("#dropbox-auth").attr("href", fs.getAuthLink());
+
+		$modal.click(e => {
+			if($(e.target).is($modal)) {
+				toggleModal();
+			}
+		});
+		$("#intro-more").click(e => {
+			$("#modal-dropbox").addClass("hidden");
+			$("#modal-about").removeClass("hidden");
+			return false;
+		});
+		$("#modal-back").click(e => {
+			if(fs.isAuthed()) {
+				toggleModal();
+			} else {
+				$("#modal-dropbox").removeClass("hidden");
+				$("#modal-about").addClass("hidden");
+			}
+			return false;
+		});
+		$("#dummy-login").click(e => {
+			fs = initializeDummyFilesystem();
 			toggleModal();
-		}
-	});
+			initLoggedIn();
+			setHint("Offline. Not actually saving anything.");
+		});
+	}
 
 	function setupList() {
 		$addButton.click(() => {
@@ -101,7 +125,7 @@ function initView() {
 			if(e.which == ENTER) {
 				let validname = validFilename($newfile.text());
 				if(!!validname) {
-					let $li = createFileItem(c);
+					let $li = createFileItem(validname);
 					$li.appendTo($files);
 					$newfile.text("");
 					$filemenu.removeClass("open");
@@ -406,6 +430,9 @@ function initView() {
 
 	function dragstartHandler(e) {
 		let $target = $(e.target);
+		if(!$target.is($("li.pqitem"))) {
+			return false;
+		}
 		$target.addClass("dragging");
 		holdStart = null;
 		$dragging = $(e.target);

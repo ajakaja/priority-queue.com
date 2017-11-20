@@ -186,3 +186,45 @@ function sampleData(filename="todo.txt") {
 	let data = new List("To do", [item], "todo.txt", new Date());
 	return data;
 };
+
+function initializeDummyFilesystem() {
+	let lists = {};
+	let loggedIn = true;
+	return {
+		isAuthed() { return loggedIn; },
+		isLoaded() { return true; },
+		logout() { 
+			lists = {};
+			loggedIn = false;
+		},
+		save(data) {
+			if(data.newfilename && data.filename) {
+				lists[filename] = null;
+				lists[newfilename] = data;
+			} else {
+				lists[filename] = data;
+			}
+			view.setHint("Offline. Not actually saving anything.", true);
+
+		},
+		delete(filename) {
+			lists[filename] = null;
+		},
+		create(data) {
+			lists[data.filename] = data; 
+		},
+		load(filename) {
+			if(lists[filename]) { 
+				return [lists[filename], null];
+			} else {
+				return null;
+			}
+		},
+		list() {
+			return Object.keys(lists);
+		}, 
+		test() {
+			return true;
+		}
+	}
+}

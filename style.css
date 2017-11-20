@@ -20,12 +20,29 @@ hr {
 p.indent {
 	text-indent: 2em;
 }
+a:link {
+    text-decoration: none;
+}
+a:visited {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+a:active {
+    text-decoration: underline;
+}
 [contenteditable=true]:empty::before {
   content: attr(placeholder);
   opacity: 0.4;
 }
+div.hidden {
+	display: none !important;
+}
 #modal {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: fixed;
     z-index: 1;
     left: 0;
@@ -36,9 +53,6 @@ p.indent {
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.4);
 }
-#modal.hidden {
-	display: none;
-}
 #modal-content {
 	margin: 60px auto;
 	background-color: #acc;
@@ -47,21 +61,14 @@ p.indent {
     max-width: 80%;
 }
 #modal-dropbox {
-	height: 100%;
 	display: flex;
-	align-items: center;
 	flex-direction: column;
 	font-size: 14px;
-}
-#modal-dropbox.hidden {
-	display: none;
+	max-width: 400px;
 }
 #modal-about {
 	height: 100%;
 	font-size: 14px;
-}
-#modal-about.hidden {
-	display: none;
 }
 #dropbox-button {
 	border: 1px solid transparent;
@@ -129,7 +136,7 @@ p.indent {
 	position: absolute;
 	min-width: 250px;
 	right: 0px;
-	background-color: #abc;
+	background-color: #acc;
 	color: #333;
 	z-index: 1;
 	border: 2px solid rgba(0,0,0,0.5);
@@ -159,7 +166,7 @@ p.indent {
 }
 #files li {
 	border-width: 0px;
-	padding: 2px;
+	padding: 3px;
 	padding-left: 25px;
 	display: flex;
 	flex-direction: row;
@@ -192,9 +199,6 @@ li.fileitem:hover div.button {
 	opacity: 0.5;
 	visibility: visible;
 	transition: opacity 0.5s;
-}
-div.hidden {
-	display: none;
 }
 li.fileitem.selected {
 	box-shadow: inset 0 0 0 2px #000;
@@ -254,9 +258,6 @@ li.fileitem.selected div.button {
 	width: 100%;
 	text-align: center;
 	pointer-events: none;
-}
-#loading.hidden {
-	display: none;
 }
 @keyframes loader {
   0%,
