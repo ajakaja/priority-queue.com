@@ -81,7 +81,7 @@ function initializeDropbox() {
 					to_path: "/" + data.filename,
 				});
 			}
-			let text = serialize(data);
+			let text = parser.serialize(data);
 			console.log("Saving data in " + data.filename);
 			let response = await dbx.filesUpload({path: "/" + data.filename, 
 					contents: text, 
@@ -92,7 +92,7 @@ function initializeDropbox() {
 			await dbx.filesDelete({path: "/" + filename});
 		},
 		async create(data) {
-			let text = serialize(data);
+			let text = parser.serialize(data);
 			console.log(`creating new file called '${data.filename}'.`);
 			let response = await dbx.filesUpload({path: "/" + data.filename,
 				contents: text
@@ -110,7 +110,7 @@ function initializeDropbox() {
 			});
 			reader.readAsText(blob);
 			let text = await promise;
-			let [data, errors] = deserialize(text);
+			let [data, errors] = parser.deserialize(text);
 			data.filename = filename;
 			return [data, errors];
 		},
