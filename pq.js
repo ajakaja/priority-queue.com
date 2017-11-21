@@ -109,6 +109,9 @@ async function save() {
 async function openFile(filename, create=false) {
 	let data, errors;
 	view.toggleLoader();
+	if(__edited) {
+		save();
+	}
 	if(fileList.includes(filename)) {
 		data = await loadFile(filename);
 	} else if(create) {
