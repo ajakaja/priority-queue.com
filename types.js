@@ -87,28 +87,24 @@ function colorScheme(str) {
 }
 
 class ListItem {
-	constructor(text, priority, date, status, edited=false) {
+	constructor(text, priority, status) {
 		this.text = text;
 		this.priority = Number.parseInt(priority);
-		this.date = date;
 		this.status = status;
-		this.__edited = edited;
+		this.__edited = false;
 	}
 }
 
 class List {
-	constructor(title, elements = [], filename, lastmodified, archived=[]) {
+	constructor(title, elements = [], filename) {
 		this.title = title;
 		this.elements = elements;
 		this.filename = filename;
-		this.lastmodified = lastmodified;
 		this.newfilename = null;
 		this.deltas = [];
-		this.archived = archived;
 	}
 }
 
-//not exactly the memory-safe or elegantly immutable way to do things -- but should get the job done
 class Delta {
 	constructor(apply, undo) {
 		this.apply = apply;

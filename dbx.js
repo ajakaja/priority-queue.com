@@ -85,7 +85,6 @@ function initializeDropbox() {
 			console.log("Saving data in " + data.filename);
 			let response = await dbx.filesUpload({path: "/" + data.filename, 
 					contents: text, 
-					client_modified: toISOwithoutMillis(data.lastmodified),
 					mode: "overwrite"});
 		},
 		async delete(filename) {
@@ -96,8 +95,7 @@ function initializeDropbox() {
 			let text = serialize(data);
 			console.log(`creating new file called '${data.filename}'.`);
 			let response = await dbx.filesUpload({path: "/" + data.filename,
-				contents: text,
-				client_modified: toISOwithoutMillis(data.lastmodified)
+				contents: text
 			});
 		},
 		async load(filename) {
@@ -112,10 +110,8 @@ function initializeDropbox() {
 			});
 			reader.readAsText(blob);
 			let text = await promise;
-			let lastmodified = new Date(response["client_modified"]);
-			let [data, errors] = deserialize(text, lastmodified);
+			let [data, errors] = deserialize(text);
 			data.filename = filename;
-			data.lastmodified = lastmodified;
 			return [data, errors];
 		},
 		async list() {

@@ -1,76 +1,19 @@
-function getAgeString(date, fluent=true) { //fluent: whether to make it more human-readable
-	let diff = (Date.now() - date.getTime()) / 1000;
-	if(diff < 0)
-		return fluent ? "??" : "0s";
-	if(diff < 5)
-		return fluent ? "just now" : `${Math.round(diff)}s`;
-	if(diff < 60)
-		return `${Math.round(diff)}s`;
-	if(diff < 60*60) 
-		return `${Math.round(diff / 60)}m`;
-	if(diff < 60*60*24*2)
-		return `${Math.round(diff/(60*60))}h`;
-	if(diff < 60*60*24*7*2)
-		return `${Math.round(diff/(60*60*24))}d`;
-	if(diff < 60*60*24*30*3)
-		return `${Math.round(diff/(60*60*24*7))}w`;
-	if(diff < 60*60*24*365*2)
-		return `${Math.round(diff/(60*60*24*30))}mo`;
-	return `${Math.round(diff/(60*60*24*365))}y`;
-}
-
-const DATE = /^([0-9]+)([a-z]+)$/;
-function getDateBefore(dateString, lastmodified) {
-	let [_, t, u] = dateString.match(DATE);
-	let factor = 0;
-	switch (u){
-		case "s":
-		factor = 1000;
-		break;
-		case "m":
-		factor = 1000*60;
-		break;
-		case "h":
-		factor = 1000*60*60;
-		break;
-		case "d":
-		factor = 1000*60*60*24;
-		break;
-		case "w":
-		factor = 1000*60*60*24*7;
-		break;
-		case "mo":
-		factor = 1000*60*60*24*30;
-		break;
-		case "y":
-		factor = 1000*60*60*24*365;
-		break;
-	}
-	let diff = factor * t;
-	return new Date(lastmodified.getTime() - diff);
-}
-
-
 function serialize(list) {
-	function getAge(date) {
-		return getAgeString(date, false);
-	}
-
 	let ret = list.title + "\n";
 	sortListByPriority(list.elements);
 	for(let el of list.elements) {
 		if(el.status == DELETED || el.status == ARCHIVED) {
 			continue;
 		}
-		if(!el.__edited && el.__cached) {
+		if(!el.__edited && el.__cached && false) {
 			ret += el.__cached + "\n";
 		} else {
 			switch(el.status) {
 				case INCOMPLETE:
-				ret += `${el.priority}. ${el.text} [${getAge(el.date)}]\n`;
+				ret += `${el.priority}. ${el.text}\n`;
 				break;
 				case COMPLETE:
-				ret += `X ${el.priority}. ${el.text} [${getAge(el.date)}]\n`;
+				ret += `X ${el.priority}. ${el.text}\n`;
 				break;
 				default:
 				break;
@@ -80,11 +23,8 @@ function serialize(list) {
 	let archived = list.elements.filter(e => e.status == ARCHIVED);
 	if(archived.length > 0) {
 		ret += "\nArchived:\n";
-		archived.sort((a,b) => {
-			return a.date - b.date;
-		});
 		for(let el of archived) {
-			ret += `* ${el.text} [${getAge(el.date)}]\n`;
+			ret += `* ${el.text}\n`;
 		}
 	}
 
@@ -95,13 +35,14 @@ const ARCHIVE_HEADER = /^Archived:$/;
 
 const PRIORITY = /(-?[0-9]+)\./.source;
 const ITEM = /\s?(.+)/.source;
-const AGE = /\s?(?:\[([0-9]+[a-z]+)\])/.source; //something of the form [5h] or [14m]
 
 const TITLE = /^(.+)$/;
-const ENTRY_INCOMPLETE = new RegExp("^" + PRIORITY + ITEM + AGE + "$");
-const ENTRY_COMPLETE = new RegExp(/^X\s*/.source + PRIORITY + ITEM + AGE + "$");
+const ENTRY_INCOMPLETE = new RegExp("^" + PRIORITY + ITEM + "$");
+const ENTRY_COMPLETE = new RegExp(/^X\s*/.source + PRIORITY + ITEM + "$");
 const BLANK = /^\s*$/;
-const ENTRY_ARCHIVE = new RegExp(/^\*\s/.source + ITEM + AGE + "$");
+const ENTRY_ARCHIVE = new RegExp(/^\*\s/.source + ITEM + "$");
+
+//todo: match the string first, then optionally the date.
 
 function deserialize(text, lastmodified) {
 	let errors = [];
@@ -127,6 +68,7 @@ function deserialize(text, lastmodified) {
 
 	let i = firstLine;
 	let archive = false
+
 	while(true) {
 		if(i >= lines.length) {
 			break;
@@ -139,10 +81,10 @@ function deserialize(text, lastmodified) {
 		}
 		else if(ENTRY_INCOMPLETE.test(line)) {
 			let [_, priority, text, age] = line.match(ENTRY_INCOMPLETE);
-			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), INCOMPLETE);
+			entry = new ListItem(text.trim(), priority, INCOMPLETE);
 		} else if(ENTRY_COMPLETE.test(line)) {
 			let [_, priority, text, age] = line.match(ENTRY_COMPLETE);
-			entry = new ListItem(text.trim(), priority, getDateBefore(age, lastmodified), COMPLETE);
+			entry = new ListItem(text.trim(), priority, COMPLETE);
 		} else {
 			errors.push(`Could not make sense of line #${i}: '${line}'.`);
 		}
@@ -165,11 +107,11 @@ function deserialize(text, lastmodified) {
 			if(BLANK.test(line)) {
 			} else if(ENTRY_ARCHIVE.test(line)) {
 				let [_, text, age] = line.match(ENTRY_ARCHIVE);
-				entry = new ListItem(text.trim(), null, getDateBefore(age, lastmodified), ARCHIVED);
+				entry = new ListItem(text.trim(), null, ARCHIVED);
 				entry.__cached = line;
 				data.elements.push(entry);
 			} else {
-				errors.push(`Could not make sense of line #${i}: '${line}'.`);
+				errors.push(`Could not make sense of archive line #${i}: '${line}'.`);
 			}
 			i++;
 		}

@@ -112,7 +112,7 @@ async function openFile(filename, create=false) {
 	if(fileList.includes(filename)) {
 		data = await loadFile(filename);
 	} else if(create) {
-		data =  new List("title", [], filename, new Date());
+		data =  new List("title", [], filename);
 		await fs.create(data);
 		fileList.push(filename);
 		files[filename] = data;
@@ -135,6 +135,12 @@ async function loadFile(filename) {
 		data = files[filename];
 	} else {
 		[data, errors] = await fs.load(filename);
+	}
+	if(errors && errors.length > 0) {
+		view.setHint(`${errors.length} errors while loading file.`);
+		for(let err of errors) {
+			console.log(err);
+		}
 	}
 	files[filename] = data;
 	return data;

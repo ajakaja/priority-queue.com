@@ -161,7 +161,8 @@ function initView() {
 		createMenuButton("#cleanup", deleteCompleted);
 		createMenuButton("#archive", archiveCompleted);
 		createMenuButton("#renumber", resetPriorities);
-		createMenuButton("#togglecolors", toggleColors);
+		createMenuButton("#colorize", enableColors);
+		createMenuButton("#decolorize", disableColors);
 		createMenuButton("#about", () => {
 			$("#settings").removeClass("open");
 			$("#modal-about").removeClass("hidden");
@@ -181,16 +182,15 @@ function initView() {
 		});
 	}
 
-	function toggleColors() {
-		if(colors) {
-			colors = false;
-			renderName();
-			Cookies.set(COLOR_COOKIE, "false");
-		} else {
-			colors = true;
-			renderName();
-			Cookies.set(COLOR_COOKIE, "true");
-		}
+	function enableColors() {
+		colors = true;
+		renderName();
+		Cookies.set(COLOR_COOKIE, "true");
+	}
+	function disableColors() {
+		colors = false;
+		renderName();
+		Cookies.set(COLOR_COOKIE, "false");
 	}
 
 	function toggleModal() {
@@ -317,7 +317,6 @@ function initView() {
 					renderStatus($li, item.status);
 					renderPriority($li, item.status, item.priority);
 				}
-				$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
 			}
 		});
 		if(changedPriority) {
@@ -338,7 +337,6 @@ function initView() {
 			.keydown(editHandler);
 		renderStatus($li, item.status);
 		renderPriority($li, item.status, item.priority);
-		$li.find("div.pqdate").text(`(${getAgeString(item.date)})`);
 
 		$li.mousedown(mousedownHandler)
 			.mouseup(mouseupHandler)
@@ -659,10 +657,12 @@ function initView() {
 		let colors;
 		if(str) {
 			colors = colorScheme(str);
-			$("#togglecolors").text("decolorize");
+			$("#colorize").addClass("hidden");
+			$("#decolorize").removeClass("hidden");
 		} else {
 			colors = DEFAULT_COLORS; 
-			$("#togglecolors").text("colorize!");
+			$("#decolorize").addClass("hidden");
+			$("#colorize").removeClass("hidden");
 		}
 		$("body").css("background-color", colors[0]);
 		$("#titlebar").css("background-color", colors[1]);

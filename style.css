@@ -36,7 +36,7 @@ a:active {
   content: attr(placeholder);
   opacity: 0.4;
 }
-div.hidden {
+.hidden {
 	display: none !important;
 }
 #modal {
@@ -334,6 +334,11 @@ li.fileitem.selected div.button {
 #settingsmenu:hover #settings {
 	display: block;
 }
+#colorize:hover {
+    background: -webkit-linear-gradient(left, red, orange , yellow, green, cyan, blue, violet); /* For Safari 5.1 to 6.0 */
+    background: -moz-linear-gradient(right, red, orange, yellow, green, cyan, blue, violet);
+    background: linear-gradient(to right, red, orange , yellow, green, cyan, blue, violet); 
+}
 #settings.open {
 	display: block;
 }
@@ -365,7 +370,6 @@ li.fileitem.selected div.button {
 
 #activelist li {
     position: relative;
-    padding: 0px;
 	transition: 0.2s;
 }
 #activelist li:not(.editing) {
@@ -391,6 +395,7 @@ li.fileitem.selected div.button {
 }
 
 li.pqitem {
+	padding: 0px 8px;
 	border-width: 0px;
 	display: flex;
 	flex-direction: row;
@@ -424,19 +429,12 @@ li.pqitem:first-of-type div.urgent {
 div.pqpriority {
 	opacity: 0.5;
 	width: 23px;
-	padding: 0px 8px;
+	padding: 0px;
 	text-align: center;
-}
-div.pqdate {
-	opacity: 0.3;
-	right: 0px;
-	text-align: right;
-	padding: 0px 8px;
-	min-width: 20px;
 }
 div.text {
 	padding-right: 5px;
-	padding-left: 2px;
+	padding-left: 10px;
 	flex: 1;
 	line-height: 1.5em;
 }
