@@ -191,7 +191,6 @@ function initializeDummyFilesystem() {
 				lists[filename] = data;
 			}
 			view.setHint("Offline. Not actually saving anything.", true);
-
 		},
 		delete(filename) {
 			lists[filename] = null;

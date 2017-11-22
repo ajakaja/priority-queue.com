@@ -18,7 +18,6 @@ $(() => {
 	}
 	fs = initializeDropbox();
 	view = initView();
-	view.toggleLoader();
 	if(!fs.isAuthed()) {
 		view.render(false);
 	} else {
@@ -36,7 +35,6 @@ async function initLoggedIn() {
 		let data = sampleData();
 		await fs.create(data);
 		fileList = [data.filename];
-		view.setHint("click and hold to edit", false);
 	}
 	view.toggleLoader();
 	let filename;
@@ -55,10 +53,11 @@ async function initLoggedIn() {
 	startSaving();
 	window.onhashchange = e => {
 		let hash = getHash();
-		if(hash && activeList.filename != hash && fileList.includes(hash)) {
+		if(hash && activeList && activeList.filename != hash && fileList.includes(hash)) {
 			openFile(hash, false);
 		}
 	};
+	view.toggleLoader();
 }
 
 function getHash() {
@@ -102,7 +101,6 @@ async function save() {
 	await fs.save(activeList);
 	deltasSinceSave = 0;
 	view.setEdited(false);
-	view.setHint("saved");
 	view.toggleSaving();
 }
 
@@ -182,7 +180,11 @@ async function renameFile(oldname, newname) {
 }
 
 function logout() {
+	if(__edited) {
+		save();
+	}
 	fs.logout();
+	window.location.hash = "";
 	activeList = null;
 	view.render(false);
 }

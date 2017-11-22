@@ -59,7 +59,7 @@ function initializeDropbox() {
 				+ `&response_type=token&redirect_uri=${redirectUrl}`;
 		},
 		async logout() {
-			Cookies.remove(TOKEN_COOKIE);
+			Cookies.expire(TOKEN_COOKIE);
 			authenticated = false;
 			token = null;
 			await dbx.authTokenRevoke();
@@ -86,6 +86,7 @@ function initializeDropbox() {
 			let response = await dbx.filesUpload({path: "/" + data.filename, 
 					contents: text, 
 					mode: "overwrite"});
+			view.setHint("saved");
 		},
 		async delete(filename) {
 			console.log(`Deleting file: '${filename}'.`);

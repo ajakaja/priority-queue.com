@@ -478,7 +478,7 @@ div.urgent {
 	opacity: 1.0;
 	color: #ccc;
 }
-#hint {
+.hint {
 	height: 2em;
 	text-align: right;
 	font-family: monospace;

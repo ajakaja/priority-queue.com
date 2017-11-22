@@ -31,7 +31,6 @@ function initView() {
 	const rowtemplate = $("#rowtemplate").get()[0];
 	const filetemplate = $("#filetemplate").get()[0];
 	const $trash = $("#trash");
-	const $hint = $("#hint");
 	const $files = $("#files");
 	const $filemenu = $("#filemenu");
 	const $settings = $("#settings");
@@ -70,6 +69,8 @@ function initView() {
 			fs = initializeDummyFilesystem();
 			toggleModal();
 			initLoggedIn();
+			$("#login").removeClass("hidden");
+			$("#logout").addClass("hidden");
 			setHint("Offline. Not actually saving anything.");
 		});
 	}
@@ -158,6 +159,7 @@ function initView() {
 			return false;
 		});
 		createMenuButton("#logout", logout);
+		createMenuButton("#login", login);
 		createMenuButton("#cleanup", deleteCompleted);
 		createMenuButton("#archive", archiveCompleted);
 		createMenuButton("#renumber", resetPriorities);
@@ -171,6 +173,12 @@ function initView() {
 		if(Cookies.get(COLOR_COOKIE) == "true") {
 			colors = true;
 		}
+	}
+
+	function login() {
+		$("#modal-about").addClass("hidden");
+		$("#modal-dropbox").removeClass("hidden");
+		toggleModal();
 	}
 
 	function createMenuButton(id, fn) {
@@ -816,12 +824,13 @@ function initView() {
 		if(repeat || !hints[text]) {
 			//add a new element that copies the existing one, to reset the animation
 			//not sure if there's a better way...
+			let $hint = $(".hint");
 			let $hint2 = $hint.clone(false);
-			$hint.after($hint2);
-			$hint.remove();
 			$hint2.text(text);
 			$hint2.css({"animation": "fadeout", 
 						"animation-duration": "4s"});
+			$hint.after($hint2);
+			$hint.remove();
 		}
 		if(!repeat) {
 			hints[text] = true;

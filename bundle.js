@@ -59,7 +59,7 @@ function initializeDropbox() {
 				+ `&response_type=token&redirect_uri=${redirectUrl}`;
 		},
 		async logout() {
-			Cookies.remove(TOKEN_COOKIE);
+			Cookies.expire(TOKEN_COOKIE);
 			authenticated = false;
 			token = null;
 			await dbx.authTokenRevoke();
@@ -86,6 +86,7 @@ function initializeDropbox() {
 			let response = await dbx.filesUpload({path: "/" + data.filename, 
 					contents: text, 
 					mode: "overwrite"});
+			view.setHint("saved");
 		},
 		async delete(filename) {
 			console.log(`Deleting file: '${filename}'.`);
@@ -272,7 +273,6 @@ $(() => {
 	}
 	fs = initializeDropbox();
 	view = initView();
-	view.toggleLoader();
 	if(!fs.isAuthed()) {
 		view.render(false);
 	} else {
@@ -290,7 +290,6 @@ async function initLoggedIn() {
 		let data = sampleData();
 		await fs.create(data);
 		fileList = [data.filename];
-		view.setHint("click and hold to edit", false);
 	}
 	view.toggleLoader();
 	let filename;
@@ -309,10 +308,11 @@ async function initLoggedIn() {
 	startSaving();
 	window.onhashchange = e => {
 		let hash = getHash();
-		if(hash && activeList.filename != hash && fileList.includes(hash)) {
+		if(hash && activeList && activeList.filename != hash && fileList.includes(hash)) {
 			openFile(hash, false);
 		}
 	};
+	view.toggleLoader();
 }
 
 function getHash() {
@@ -356,7 +356,6 @@ async function save() {
 	await fs.save(activeList);
 	deltasSinceSave = 0;
 	view.setEdited(false);
-	view.setHint("saved");
 	view.toggleSaving();
 }
 
@@ -436,7 +435,11 @@ async function renameFile(oldname, newname) {
 }
 
 function logout() {
+	if(__edited) {
+		save();
+	}
 	fs.logout();
+	window.location.hash = "";
 	activeList = null;
 	view.render(false);
 }
@@ -584,16 +587,6 @@ Array.prototype.removeElement = function(el) {
 	}
 	this.splice(index, 1);
 	return index;
-}
-
-function cycle(...fns) {
-	let gen = function*() {
-		let i = 0, l = fns.length;
-		while(true) {
-			yield fns[i++ % l]();
-		}
-	}();
-	return () => gen.next();
 }
 
 function sortListByPriority(list) {
@@ -752,7 +745,6 @@ function initializeDummyFilesystem() {
 				lists[filename] = data;
 			}
 			view.setHint("Offline. Not actually saving anything.", true);
-
 		},
 		delete(filename) {
 			lists[filename] = null;
@@ -808,7 +800,6 @@ function initView() {
 	const rowtemplate = $("#rowtemplate").get()[0];
 	const filetemplate = $("#filetemplate").get()[0];
 	const $trash = $("#trash");
-	const $hint = $("#hint");
 	const $files = $("#files");
 	const $filemenu = $("#filemenu");
 	const $settings = $("#settings");
@@ -847,6 +838,8 @@ function initView() {
 			fs = initializeDummyFilesystem();
 			toggleModal();
 			initLoggedIn();
+			$("#login").removeClass("hidden");
+			$("#logout").addClass("hidden");
 			setHint("Offline. Not actually saving anything.");
 		});
 	}
@@ -935,6 +928,7 @@ function initView() {
 			return false;
 		});
 		createMenuButton("#logout", logout);
+		createMenuButton("#login", login);
 		createMenuButton("#cleanup", deleteCompleted);
 		createMenuButton("#archive", archiveCompleted);
 		createMenuButton("#renumber", resetPriorities);
@@ -948,6 +942,12 @@ function initView() {
 		if(Cookies.get(COLOR_COOKIE) == "true") {
 			colors = true;
 		}
+	}
+
+	function login() {
+		$("#modal-about").addClass("hidden");
+		$("#modal-dropbox").removeClass("hidden");
+		toggleModal();
 	}
 
 	function createMenuButton(id, fn) {
@@ -1593,12 +1593,13 @@ function initView() {
 		if(repeat || !hints[text]) {
 			//add a new element that copies the existing one, to reset the animation
 			//not sure if there's a better way...
+			let $hint = $(".hint");
 			let $hint2 = $hint.clone(false);
-			$hint.after($hint2);
-			$hint.remove();
 			$hint2.text(text);
 			$hint2.css({"animation": "fadeout", 
 						"animation-duration": "4s"});
+			$hint.after($hint2);
+			$hint.remove();
 		}
 		if(!repeat) {
 			hints[text] = true;

@@ -12,7 +12,7 @@
 
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
 	<script src="https://code.jquery.com/jquery-3.2.1.slim.js"></script>
-	<script src="pq.js"></script>
+	<script src="bundle.js"></script>
 
 </head>
 <body>
@@ -42,8 +42,6 @@
 				<p class="indent">Creating unhosted-style apps and giving them out is, I think, a way to do something about the somewhat sorry direction software has gone, wherein everyone wants you to use their product so they can show you pointless ads (and then convince other people you're looking at those ads, even when you're not) (and trick you into clicking them), or sell your data to someone else who... wants to show you more pointless ads. It's telling that it's hard to find an honestly free and non-irritating version of mobile apps for everyday tasks like "flashlight" or "to-do list" or "metronome".</p>
 
 				<hr/>
-
-				<p class="indent"> I'm not a very practiced web-developer or anything like that, so I really can't vouch for the design or implementation of any of this, and it's possible some bug might randomly delete your data (but Dropbox could then restore the old version, anyway). I also haven't tried <em>at all</em> to use backwards-compatible HTML/CSS/JS, since this was also a chance to learn the fancy new stuff. And I haven't looked into accessibility at all, but would like to.</p>
 
 				<p>Pull requests welcome at <a href="https://github.com/ajakaja/priority-queue.com">https://github.com/ajakaja/priority-queue.com</a>.</p>
 				<p>Or go see if there's anything on <a href="http://alexkritchevsky.com">my blog</a> yet.</p>
@@ -92,6 +90,7 @@
 							<li id="decolorize" class="hidden">decolorize</li>
 							<li id="about">about</li>
 							<li id="logout">logout</li>
+							<li id="login" class="hidden">login</li>
 						</ul>
 					</div>
 				</div>
@@ -115,7 +114,7 @@
 				<li id="additem"><div>+</div></li>
 			</ul>
 		</div>
-		<div id="hint" ></div>
+		<div class="hint" ></div>
 	</div>
 	<svg style="display: none">
 		<symbol id="trashicon" viewBox="0 0 30 30">
