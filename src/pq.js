@@ -19,8 +19,10 @@ $(() => {
 	fs = initializeDropbox();
 	view = initView();
 	if(!fs.isAuthed()) {
+		view.setLoggedIn(false);
 		view.render(false);
 	} else {
+		view.setLoggedIn(true);
 		initLoggedIn();
 	}
 });
@@ -186,6 +188,7 @@ function logout() {
 	fs.logout();
 	window.location.hash = "";
 	activeList = null;
+	view.setLoggedIn(false);
 	view.render(false);
 }
 

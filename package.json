@@ -7,11 +7,16 @@
     "concat": "^1.0.3",
     "cookies-js": "^1.2.3",
     "dropbox": "^2.5.12",
-    "jquery-slim": "^3.0.0"
+    "jquery-slim": "^3.0.0",
+    "npm-watch": "^0.3.0"
   },
   "devDependencies": {},
+  "watch": {
+    "build": "src/*.js"
+  },
   "scripts": {
-    "build": "concat"
+    "build": "./build",
+    "watch": "npm-watch build"
   },
   "repository": {
     "type": "git",

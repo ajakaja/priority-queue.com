@@ -49,6 +49,7 @@ function initView() {
 		$modal.click(e => {
 			if($(e.target).is($modal)) {
 				toggleModal();
+				setHint("Not logged in.");
 			}
 		});
 		$("#intro-more").click(e => {
@@ -69,8 +70,6 @@ function initView() {
 			fs = initializeDummyFilesystem();
 			toggleModal();
 			initLoggedIn();
-			$("#login").removeClass("hidden");
-			$("#logout").addClass("hidden");
 			setHint("Offline. Not actually saving anything.");
 		});
 	}
@@ -103,11 +102,7 @@ function initView() {
 	}
 
 	function setupTitleBar() {
-		$name.dblclick(() => {
-			$name.attr("contenteditable", "true");
-			selectText($name);
-			$name.addClass("editing");
-		}).keydown(e => {
+		$name.keydown(e => {
 			if($name.hasClass("editing")) {
 				if(e.which == ENTER) {
 					e.preventDefault();
@@ -120,6 +115,11 @@ function initView() {
 					}
 				}
 			}
+		});
+		$("#listnameholder div.edit").click(() => {
+			$name.attr("contenteditable", "true").addClass("editing");
+			selectText($name);
+			return false;
 		});
 		$save.click(save);
 		$newfile.keydown(e => {
@@ -300,6 +300,9 @@ function initView() {
 		$("li.fileitem").remove();
 		$filename.text("");
 		$name.text("");
+		if(colors) {
+			setColors(false);
+		}
 	}
 
 	function renderList() {
@@ -676,7 +679,6 @@ function initView() {
 		$("#titlebar").css("background-color", colors[1]);
 		$("#fileselector").css("background-color", colors[2]);
 	}
-	window.setColors = setColors;
 
 	function swap($a, $b) {
 		let pA = getPriority($a);
@@ -877,6 +879,10 @@ function initView() {
 		},
 		toggleSaving() {
 			$save.toggleClass("saving");
+		},
+		setLoggedIn(loggedIn) {
+			$("#login").toggleClass("hidden", loggedIn);
+			$("#logout").toggleClass("hidden", !loggedIn);
 		}
 	}
 }
