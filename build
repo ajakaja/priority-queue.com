@@ -1,0 +1,1 @@
+./node_modules/.bin/concat -o pq.js src/* node_modules/cookies-js/dist/cookies.min.js

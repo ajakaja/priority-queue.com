@@ -35,16 +35,6 @@ Array.prototype.removeElement = function(el) {
 	return index;
 }
 
-function cycle(...fns) {
-	let gen = function*() {
-		let i = 0, l = fns.length;
-		while(true) {
-			yield fns[i++ % l]();
-		}
-	}();
-	return () => gen.next();
-}
-
 function sortListByPriority(list) {
 	list.sort((a, b) => {
 		if(a.status == ARCHIVED) {
