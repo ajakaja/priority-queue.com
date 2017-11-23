@@ -277,26 +277,3 @@ function archiveCompleted() {
 	endSequence();
 	view.update();
 }
-
-function deleteCompleted() {
-	startSequence();
-	let completed = activeList.elements.filter(e => e.status == COMPLETE);
-	for(let el of completed) {
-		set(el, "status", DELETED);
-	}
-	endSequence();
-	view.update();
-}
-function resetPriorities() {
-	startSequence();
-	sortListByPriority(activeList.elements);
-	let i = 1;
-	for(let e of activeList.elements) {
-		if(e.status != ARCHIVED && e.status != DELETED) {
-			set(e, "priority", i);
-			i++;
-		}
-	}
-	endSequence();
-	view.update();
-}

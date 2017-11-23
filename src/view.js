@@ -160,9 +160,7 @@ function initView() {
 		});
 		createMenuButton("#logout", logout);
 		createMenuButton("#login", login);
-		createMenuButton("#cleanup", deleteCompleted);
 		createMenuButton("#archive", archiveCompleted);
-		createMenuButton("#renumber", resetPriorities);
 		createMenuButton("#colorize", enableColors);
 		createMenuButton("#decolorize", disableColors);
 		createMenuButton("#about", () => {
@@ -393,8 +391,7 @@ function initView() {
 		if($target.is("div.urgent")) {
 			let $first = $("li.pqitem").first();
 			if(!$this.is($first)) {
-				let priority = getPriority($first);
-				setPriority($this, priority);
+				resetPriorities();
 				$this.detach().insertBefore($first);
 			}
 			return false;
@@ -542,40 +539,10 @@ function initView() {
 				$dragClone.remove();
 			} else if($dragClone) {
 				if($dragClone.parent().length > 0) {
-					startSequence();
-
 					$dragging.detach();
 					$dragClone.before($dragging);
 					$dragClone.detach();
-
-					let index = $dragging.index() - 1; //Jquery index starts at 1
-					let item = $dragging.data("item");
-
-					const priority = getPriority($dragClone);
-					const oldPriority = getPriority($dragging);
-					if(oldPriority != priority) { //we're not back where we started
-						setPriority($dragging, priority);
-						highlight($dragging);
-
-						let $prev = $dragging.prev("li.pqitem");
-						let prevPriority = priority;
-						//propagate new numbers so we don't have any two equal
-						while($prev.length != 0 && getPriority($prev) == prevPriority) {
-							prevPriority--;
-							setPriority($prev, prevPriority);
-							highlight($prev);
-							$prev = $prev.prev("li.pqitem");
-						}
-						let nextPriority = priority;
-						let $next = $dragging.next("li.pqitem");
-						while($next.length != 0 && getPriority($next) == nextPriority) {
-							nextPriority++;
-							setPriority($next, nextPriority);
-							highlight($next);
-							$next = $next.next("li.pqitem");
-						}
-					}	
-					endSequence();
+					resetPriorities();
 				}
 				$dragging.removeClass("dragging");
 				$dragClone.remove();
@@ -584,6 +551,18 @@ function initView() {
 			$dragClone = null;
 			$trash.removeClass("shown").removeClass("hover");
 		});
+	}
+
+	function resetPriorities() {
+		startSequence();
+		$("li.pqitem").each((i, e) => {
+			let $e = $(e);
+			if(getPriority($e) != i+1) {
+				setPriority($e, i+1);
+				highlight($e);
+			}
+		});
+		endSequence();
 	}
 
 	function setupHotkeys() {
