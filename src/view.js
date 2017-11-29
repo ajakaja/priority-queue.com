@@ -39,7 +39,7 @@ function initView() {
 	const DEFAULT_COLORS = ["#9cc", "#699", "#acc"];
 	const COLOR_COOKIE = "colors";
 
-	let toggleLoader = () => $loader.toggleClass("hidden");
+	let toggleLoader = (toggle) => $loader.toggleClass("hidden", !toggle);
 
 	setupModal();
 
@@ -48,9 +48,16 @@ function initView() {
 
 		$modal.click(e => {
 			if($(e.target).is($modal)) {
-				toggleModal();
-				setHint("Not logged in.");
+				if(!fs.isAuthed()) {
+					fs = initializeDummyFilesystem();
+					toggleModal();
+					initLoggedIn();
+					setHint("Offline. Not actually saving anything.");
+				} else {
+					toggleModal();
+				}
 			}
+
 		});
 		$("#intro-more").click(e => {
 			$("#modal-dropbox").addClass("hidden");
@@ -79,7 +86,7 @@ function initView() {
 			let lastPriority;
 			let $last = $("li.pqitem").last();
 			if($last.length > 0) {
-				lastPriority = getPriority($last) + randInt(1, 3);
+				lastPriority = getPriority($last) + 1;
 			} else {
 				lastPriority = 1;
 			}

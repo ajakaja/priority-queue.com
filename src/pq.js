@@ -32,6 +32,7 @@ async function initLoggedIn() {
 		setHint("Could not log in. Sorry.");
 		return;
 	}
+	view.toggleLoader();
 	fileList = await fs.list();
 	if(fileList.length == 0) {
 		let data = sampleData();
@@ -59,7 +60,6 @@ async function initLoggedIn() {
 			openFile(hash, false);
 		}
 	};
-	view.toggleLoader();
 }
 
 function getHash() {
@@ -108,7 +108,7 @@ async function save() {
 
 async function openFile(filename, create=false) {
 	let data, errors;
-	view.toggleLoader();
+	view.toggleLoader(true);
 	if(__edited) {
 		save();
 	}
@@ -129,7 +129,7 @@ async function openFile(filename, create=false) {
 		view.render();
 		Cookies.set(LAST_OPEN_COOKIE, filename);
 	}
-	view.toggleLoader();
+	view.toggleLoader(false);
 }
 
 async function loadFile(filename) {
