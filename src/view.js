@@ -198,12 +198,12 @@ function initView() {
 	function enableColors() {
 		colors = true;
 		renderName();
-		Cookies.set(COLOR_COOKIE, "true");
+		Cookies.set(COLOR_COOKIE, "true", { expires: 60*60*24*30 });
 	}
 	function disableColors() {
 		colors = false;
 		renderName();
-		Cookies.set(COLOR_COOKIE, "false");
+		Cookies.set(COLOR_COOKIE, "false", { expires: 60*60*24*30 });
 	}
 
 	function toggleModal() {

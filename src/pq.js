@@ -127,7 +127,7 @@ async function openFile(filename, create=false) {
 		activeList = data;
 		history = data.deltas.length;
 		view.render();
-		Cookies.set(LAST_OPEN_COOKIE, filename);
+		Cookies.set(LAST_OPEN_COOKIE, filename, { expires: 60*60*24*30 });
 	}
 	view.toggleLoader(false);
 }
@@ -175,7 +175,7 @@ async function renameFile(oldname, newname) {
 	fileList.add(newname);
 	if(activeList == data) {
 		view.render();
-		Cookies.set(LAST_OPEN_COOKIE, filename);
+		Cookies.set(LAST_OPEN_COOKIE, filename, { expires: 60*60*24*30 });
 	}
 	view.setHint(`renamed '${oldname}' to '${newname}'`);
 	view.toggleLoader();

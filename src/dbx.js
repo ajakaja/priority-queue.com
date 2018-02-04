@@ -16,7 +16,7 @@ function initializeDropbox() {
 		let params = new URLSearchParams(window.location.hash.slice(1));
 		let ret = params.get("access_token");
 		if(!!ret) {
-			Cookies.set(TOKEN_COOKIE, ret);
+			Cookies.set(TOKEN_COOKIE, ret, { expires: 60*60*24*30 });
 			window.history.replaceState({}, document.title, window.location.origin);
 		}
 		return ret;
@@ -26,7 +26,6 @@ function initializeDropbox() {
 		if(token != null) {
 			return true;
 		}
-
 		return !!getToken();
 	}
 
@@ -37,7 +36,7 @@ function initializeDropbox() {
 	if(isAuthenticated()) {
 		token = getToken();
 		authenticated = true;
-		dbx = new Dropbox({ accessToken: token });
+		dbx = new Dropbox.Dropbox({ accessToken: token });
 	}
 
 	function toISOwithoutMillis(date) {
@@ -51,7 +50,7 @@ function initializeDropbox() {
 		getAuthLink() {
 			let redirectUrl;
 			if(window.location.href.includes("localhost")) {
-				redirectUrl = "http://localhost:8080";
+				redirectUrl = window.location.origin;
 			} else {
 				redirectUrl = URL;
 			}
@@ -65,7 +64,7 @@ function initializeDropbox() {
 			await dbx.authTokenRevoke();
 			if(window.location.href.includes("access_token")) {
 				if(window.location.href.includes("localhost")) {
-					redirectUrl = "http://localhost:8080";
+					redirectUrl = window.location.origin;
 				} else {
 					redirectUrl = URL;
 				}
