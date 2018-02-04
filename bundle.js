@@ -314,6 +314,9 @@ async function initLoggedIn() {
 			openFile(hash, false);
 		}
 	};
+	$(window).on("beforeunload", async e => {
+		await fs.save(activeList);
+	});
 }
 
 function getHash() {
