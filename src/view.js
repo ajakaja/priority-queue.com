@@ -23,7 +23,6 @@ function initView() {
 	const $ul = $("#activelist");
 	const $save = $("#save");
 	const $loader = $("#loading");
-	const $name = $("#listname");
 	const $filename = $("#filename");
 	const $addButton = $("#additem");
 	const $newfile = $("#newfile");
@@ -109,25 +108,6 @@ function initView() {
 	}
 
 	function setupTitleBar() {
-		$name.keydown(e => {
-			if($name.hasClass("editing")) {
-				if(e.which == ENTER) {
-					e.preventDefault();
-					e.stopPropagation();
-					window.getSelection().removeAllRanges();
-					$name.removeClass("editing");
-					$name.attr("contenteditable", "false");
-					if($name.text() != activeList.title) {
-						set(activeList, "title", $name.text());
-					}
-				}
-			}
-		});
-		$("#listnameholder div.edit").click(() => {
-			$name.attr("contenteditable", "true").addClass("editing");
-			selectText($name);
-			return false;
-		});
 		$save.click(save);
 		$newfile.keydown(e => {
 			if(e.which == ENTER) {
@@ -282,16 +262,18 @@ function initView() {
 		return $li;
 	}
 
-
+	function toTitle(filename) {
+		return filename.split(".")[0];
+	}
 	function renderName() {
-		$name.text(activeList.title);
 		if(colors) {
 			setColors(activeList.filename);
 		} else {
 			setColors(null);
 		}
 		if(activeList.filename) {
-			$filename.text(activeList.filename);
+			$filename.text(toTitle(activeList.filename));
+			$filename.addClass("shown");
 		}
 		$("li.fileitem").remove();
 		fileList.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -304,14 +286,12 @@ function initView() {
 		$("li.pqitem").remove();
 		$("li.fileitem").remove();
 		$filename.text("");
-		$name.text("");
 		if(colors) {
 			setColors(false);
 		}
 	}
 
 	function renderList() {
-		$name.text(activeList.title);
 		$filename.text(activeList.filename);
 		$("li.pqitem").remove();
 		activeList.elements

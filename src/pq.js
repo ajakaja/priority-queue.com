@@ -55,13 +55,17 @@ async function initLoggedIn() {
 	await openFile(filename, false);
 	startSaving();
 	window.onhashchange = e => {
-		let hash = getHash();
-		if(hash && activeList && activeList.filename != hash && fileList.includes(hash)) {
-			openFile(hash, false);
+		let filename = getHash(); //the #filename section of the URL
+		if(filename && activeList && activeList.filename != filename && fileList.includes(filename)) {
+			openFile(filename, false);
 		}
 	};
 	$(window).on("beforeunload", async e => {
-		await fs.save(activeList);
+		if(__edited) {
+			await fs.save(activeList);
+		} else {
+			return;
+		}
 	});
 }
 
@@ -118,7 +122,7 @@ async function openFile(filename, create=false) {
 	if(fileList.includes(filename)) {
 		data = await loadFile(filename);
 	} else if(create) {
-		data =  new List("title", [], filename);
+		data =  new List([], filename);
 		await fs.create(data);
 		fileList.push(filename);
 		files[filename] = data;

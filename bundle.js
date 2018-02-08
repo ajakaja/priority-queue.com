@@ -145,8 +145,8 @@ let parser = (() => {
 
 	return {
 		serialize(list) {
-			let ret = list.title + "\n";
 			sortListByPriority(list.elements);
+			let ret = "";
 			for(let el of list.elements) {
 				if(el.status == DELETED || el.status == ARCHIVED) {
 					continue;
@@ -187,13 +187,11 @@ let parser = (() => {
 
 			let title = lines[0];
 			let firstLine = 1;
+			if (!ENTRY_INCOMPLETE.test(title) && !ENTRY_COMPLETE.test(title)) {
 
-			if(TITLE.test(title)) {
-				data.title = title.match(TITLE)[1];
 			} else if (BLANK.test(title)) {
 				errors.push(`Title is blank.`);
-			} else if (ENTRY.test(title)){
-				errors.push(`No title present -- first line is '${title}'.`)
+			} else {
 				firstLine = 0;
 			}
 
@@ -309,13 +307,17 @@ async function initLoggedIn() {
 	await openFile(filename, false);
 	startSaving();
 	window.onhashchange = e => {
-		let hash = getHash();
-		if(hash && activeList && activeList.filename != hash && fileList.includes(hash)) {
-			openFile(hash, false);
+		let filename = getHash(); //the #filename section of the URL
+		if(filename && activeList && activeList.filename != filename && fileList.includes(filename)) {
+			openFile(filename, false);
 		}
 	};
 	$(window).on("beforeunload", async e => {
-		await fs.save(activeList);
+		if(__edited) {
+			await fs.save(activeList);
+		} else {
+			return;
+		}
 	});
 }
 
@@ -372,7 +374,7 @@ async function openFile(filename, create=false) {
 	if(fileList.includes(filename)) {
 		data = await loadFile(filename);
 	} else if(create) {
-		data =  new List("title", [], filename);
+		data =  new List([], filename);
 		await fs.create(data);
 		fileList.push(filename);
 		files[filename] = data;
@@ -622,8 +624,8 @@ class ListItem {
 }
 
 class List {
-	constructor(title, elements = [], filename) {
-		this.title = title;
+	constructor(elements = [], filename) {
+		this.title = filename;
 		this.elements = elements;
 		this.filename = filename;
 		this.newfilename = null;
@@ -705,7 +707,7 @@ function isOffscreen($el) {
 
 function sampleData(filename="todo.txt") {
 	let item = new ListItem("edit this, or add new items below", 1, new Date(), INCOMPLETE);
-	let data = new List("To do", [item], "todo.txt", new Date());
+	let data = new List([item], "todo.txt", new Date());
 	return data;
 };
 
@@ -774,7 +776,6 @@ function initView() {
 	const $ul = $("#activelist");
 	const $save = $("#save");
 	const $loader = $("#loading");
-	const $name = $("#listname");
 	const $filename = $("#filename");
 	const $addButton = $("#additem");
 	const $newfile = $("#newfile");
@@ -860,25 +861,6 @@ function initView() {
 	}
 
 	function setupTitleBar() {
-		$name.keydown(e => {
-			if($name.hasClass("editing")) {
-				if(e.which == ENTER) {
-					e.preventDefault();
-					e.stopPropagation();
-					window.getSelection().removeAllRanges();
-					$name.removeClass("editing");
-					$name.attr("contenteditable", "false");
-					if($name.text() != activeList.title) {
-						set(activeList, "title", $name.text());
-					}
-				}
-			}
-		});
-		$("#listnameholder div.edit").click(() => {
-			$name.attr("contenteditable", "true").addClass("editing");
-			selectText($name);
-			return false;
-		});
 		$save.click(save);
 		$newfile.keydown(e => {
 			if(e.which == ENTER) {
@@ -1033,16 +1015,18 @@ function initView() {
 		return $li;
 	}
 
-
+	function toTitle(filename) {
+		return filename.split(".")[0];
+	}
 	function renderName() {
-		$name.text(activeList.title);
 		if(colors) {
 			setColors(activeList.filename);
 		} else {
 			setColors(null);
 		}
 		if(activeList.filename) {
-			$filename.text(activeList.filename);
+			$filename.text(toTitle(activeList.filename));
+			$filename.addClass("shown");
 		}
 		$("li.fileitem").remove();
 		fileList.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -1055,14 +1039,12 @@ function initView() {
 		$("li.pqitem").remove();
 		$("li.fileitem").remove();
 		$filename.text("");
-		$name.text("");
 		if(colors) {
 			setColors(false);
 		}
 	}
 
 	function renderList() {
-		$name.text(activeList.title);
 		$filename.text(activeList.filename);
 		$("li.pqitem").remove();
 		activeList.elements

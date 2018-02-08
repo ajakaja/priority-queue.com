@@ -86,8 +86,8 @@ class ListItem {
 }
 
 class List {
-	constructor(title, elements = [], filename) {
-		this.title = title;
+	constructor(elements = [], filename) {
+		this.title = filename;
 		this.elements = elements;
 		this.filename = filename;
 		this.newfilename = null;
@@ -169,7 +169,7 @@ function isOffscreen($el) {
 
 function sampleData(filename="todo.txt") {
 	let item = new ListItem("edit this, or add new items below", 1, new Date(), INCOMPLETE);
-	let data = new List("To do", [item], "todo.txt", new Date());
+	let data = new List([item], "todo.txt", new Date());
 	return data;
 };
 

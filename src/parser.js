@@ -10,8 +10,8 @@ let parser = (() => {
 
 	return {
 		serialize(list) {
-			let ret = list.title + "\n";
 			sortListByPriority(list.elements);
+			let ret = "";
 			for(let el of list.elements) {
 				if(el.status == DELETED || el.status == ARCHIVED) {
 					continue;
@@ -52,13 +52,11 @@ let parser = (() => {
 
 			let title = lines[0];
 			let firstLine = 1;
+			if (!ENTRY_INCOMPLETE.test(title) && !ENTRY_COMPLETE.test(title)) {
 
-			if(TITLE.test(title)) {
-				data.title = title.match(TITLE)[1];
 			} else if (BLANK.test(title)) {
 				errors.push(`Title is blank.`);
-			} else if (ENTRY.test(title)){
-				errors.push(`No title present -- first line is '${title}'.`)
+			} else {
 				firstLine = 0;
 			}
 
