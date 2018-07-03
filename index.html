@@ -19,8 +19,10 @@
 	<div id="modal" class="hidden">
 		<div id="modal-content">
 			<div id="modal-dropbox" class="hidden">
-				<p>Priority-Queue.com is a minimalistic To-Do List app. It's for managing your priorities. In a queue.</p>
-				<p>It uses the <a href="https://unhosted.org/">Unhosted</a> architecture: the website is completely static, and your data is stored in a place of your choosing. Right now you can use Dropbox as the file storage.</p>
+				<p><em>Priority-Queue</em> is a minimalistic To-Do List. It's for managing your priorities. In a queue.</p>
+				<p>It uses the <a href="https://unhosted.org/">Unhosted</a> architecture: the website is completely static, and your data is stored in a place of your choosing.
+					
+				<p>Right now you can use Dropbox as the file storage. It uses only a single folder within your Dropbox, and has no access to the rest of your files.</p>
 
 				<p>Connect a Dropbox account:</p>
 				<a href="" id="dropbox-auth">
@@ -31,29 +33,41 @@
 
 				<p>(or just <a href="#" id="dummy-login">mess around</a> offline)</p>
 
-				<p><a href="#" id="intro-more">more...</a></p>
+				<p><a href="#" id="intro-more">more info...</a></p>
 			</div>
 			<div id="modal-about" class="hidden">
-				<h1>About PQ</h1>
-				<p>Priority-Queue.com is a minimalistic To-Do List app. It's for managing your priorities. In a queue.</p>
-				<p class="indent">It follows the <a href="https://unhosted.org/">Unhosted</a> architecture: the website is completely static HTML, JS, and CSS, and your personal data is stored in a place of your choosing. I use Dropbox for personal storage so I've implemented bindings for it, but there's no reason the site couldn't use any other internet-accessible file storage.</p>
+				<h1>About</h1>
+				<p><em>Priority-Queue</em> is a minimalistic To-Do List. It's for managing your priorities. In a queue. Not unlike the <a href="https://en.wikipedia.org/wiki/Priority_queue">data structure</a>.</p>
 
-				<p class="indent">I love, and strongly endorse, the Unhosted style for app architecture. Data is entirely owned by the user, at least in the sense that it never passes through a server owned by the app (Dropbox of course still has your data, but at least you don't have to trust a <em>new</em> entity to use the app). It also eliminates most of the complexity in making an app that runs and stays synchronized across multiple devices. And it makes it easier to give software to the public, since hosting a static site is essentially free. And if I get tired of hosting it someday, anyone else can just do it, since there's no backend required -- or you can run a local version wherever you want.
+				<p class="indent">It follows the <a href="https://unhosted.org/">Unhosted</a> architecture: the website is completely static HTML/JS/CSS, and your personal data is stored in a place of your choosing. I use Dropbox for personal storage so I've implemented bindings for it, but there's no reason the site couldn't use any other internet-accessible file storage.</p>
+
+				<p class="indent">I strongly endorse the Unhosted architecture. Data is entirely owned by the user, at least in the sense that it never passes through a server owned by the app. Dropbox of course still has your data, but at least you don't have to trust a <em>new</em> entity for every tool you want to try out.
+					
+				<p class="indent">It also eliminates most of the complexity in making an app that runs and stays synchronized across multiple devices. And it makes it easier to give software to the public, since hosting a static site is essentially free. And if I get tired of hosting it someday, anyone else can just do it, since there's no backend required -- or you can run a local version wherever you want.
 
 				<p class="indent">I view creating free Unhosted apps as a mild form of protest. These days everyone wants you to use their product so they can show you pointless ads, and to convince other people you're looking at those ads, and trick you into clicking them, and/or to sell your data to someone else who wants to show you more pointless ads. If we make good, free, low-maintenance-cost versions of everything you need, maybe we can force 'ad-ridden crap' into extinction..</p>
 
 				<hr/>
 
-				<p>Source code available at <a href="https://github.com/ajakaja/priority-queue.com">https://github.com/ajakaja/priority-queue.com</a>.</p>
-				<p>Or... go see if there's anything on <a href="http://alexkritchevsky.com">my blog</a> yet.</p>
+				<p>Source code available at <a href="https://github.com/ajakaja/priority-queue.com">https://github.com/ajakaja/priority-queue.com</a>. Pull requests welcome.</p>
+				<p>Or, go see if there's anything on <a href="http://alexkritchevsky.com">my blog</a> yet.</p>
 
 				<p><a href="#" class="modal-back">←back</a></p>
 			</div>
 			<div id="modal-hotkeys" class="hidden">
 				<h1> Hotkeys </h1>
-				<ul>
-					<li></li>
-				</ul>
+				<dl>
+					<dt><code>⇧,⇩</code> - move selection up and down</dt>
+					<dt><code>Meta ⇧,⇩</code> - move selected element up and down</dt>
+					<dt><code>Enter</code> - toggle completion of selection</dt>
+					<dt><code>Esc</code> - clear editing</dt>
+					<dt><code>Del</code> - delete selection</dt>
+					<dt><code>Meta Z</code> - undo</dt>
+					<dt><code>Meta ⇧ Z</code> - redo</dt>
+					<dt><code>Meta S</code> - save</dt>
+				</dl>
+				<p>("Meta" means
+					<code>Ctrl</code> on Windows, ⌘ on Mac, etc.)</p>
 			</div>
 		</div>
 	</div>
@@ -92,6 +106,7 @@
 							<li id="archive">archive completed</li>
 							<li id="colorize" class="hidden">colorize!</li>
 							<li id="decolorize" class="hidden">decolorize</li>
+							<li id="hotkeys">hotkeys</li>
 							<li id="about">about</li>
 							<li id="logout" class="hidden">logout</li>
 							<li id="login">login</li>

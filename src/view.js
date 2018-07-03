@@ -38,23 +38,25 @@ function initView() {
 	const DEFAULT_COLORS = ["#9cc", "#699", "#acc"];
 	const COLOR_COOKIE = "colors";
 
+	const MODAL_DBX = "MODAL_DBX";
+	const MODAL_ABOUT = "MODAL_ABOUT";
+	const MODAL_HOTKEYS = "MODAL_HOTKEYS";
+
 	let toggleLoader = (toggle) => $loader.toggleClass("hidden", !toggle);
 
-	setupModal();
-
-	function setupModal() {
+	(function setupModal() {
 		$("#dropbox-auth").attr("href", fs.getAuthLink());
 
 		$modal.click(e => {
 			if($(e.target).is($modal)) {
 				if(!fs.isAuthed()) {
 					fs = initializeDummyFilesystem();
-					toggleModal();
 					initLoggedIn();
 					setHint("Offline. Not actually saving anything.");
 				} else {
-					toggleModal();
 				}
+				toggleModal(false);
+
 			}
 
 		});
@@ -65,7 +67,7 @@ function initView() {
 		});
 		$(".modal-back").click(e => {
 			if(fs.isAuthed()) {
-				toggleModal();
+				toggleModal(false);
 			} else {
 				$("#modal-dropbox").removeClass("hidden");
 				$("#modal-about").addClass("hidden");
@@ -74,11 +76,11 @@ function initView() {
 		});
 		$("#dummy-login").click(e => {
 			fs = initializeDummyFilesystem();
-			toggleModal();
+			toggleModal(false);
 			initLoggedIn();
 			setHint("Offline. Not actually saving anything.");
 		});
-	}
+	})();
 
 	function setupList() {
 		$addButton.click(() => {
@@ -137,6 +139,12 @@ function initView() {
 			return false;
 		});
 
+		$("#settingsmenu").hover(e => {
+			$(".open").removeClass("open");
+			$("#settings").addClass("open");
+		}, e => {
+			$("#settings").removeClass("open");
+		});
 		$("#settingsbutton").mousedown(e => {
 			if(e.button != 0) {
 				return false;
@@ -146,24 +154,22 @@ function initView() {
 			return false;
 		});
 		createMenuButton("#logout", logout);
-		createMenuButton("#login", login);
+		createMenuButton("#login", () => toggleModal(true, MODAL_DBX));
 		createMenuButton("#archive", archiveCompleted);
 		createMenuButton("#colorize", enableColors);
 		createMenuButton("#decolorize", disableColors);
 		createMenuButton("#about", () => {
 			$("#settings").removeClass("open");
-			$("#modal-about").removeClass("hidden");
-			toggleModal();
+			toggleModal(true, MODAL_ABOUT);
 		});
+		createMenuButton("#hotkeys", () => {
+			$(".open").removeClass("open");
+			$("#modal-hotkeys").removeClass("hidden");
+			toggleModal(true, MODAL_HOTKEYS);
+		})
 		if(Cookies.get(COLOR_COOKIE) == "true") {
 			colors = true;
 		}
-	}
-
-	function login() {
-		$("#modal-about").addClass("hidden");
-		$("#modal-dropbox").removeClass("hidden");
-		toggleModal();
 	}
 
 	function createMenuButton(id, fn) {
@@ -186,13 +192,24 @@ function initView() {
 		Cookies.set(COLOR_COOKIE, "false", { expires: 60*60*24*30 });
 	}
 
-	function toggleModal() {
-		if($modal.hasClass("hidden")) {
+	function toggleModal(bool, which) {
+		if(bool) {
+			$("#modal-dropbox").addClass("hidden");
+			$("#modal-about").addClass("hidden");
+			$("#modal-hotkeys").addClass("hidden");
+			if(which == MODAL_ABOUT) {
+				$("#modal-about").removeClass("hidden")
+			} else if (which == MODAL_DBX) {
+				$("#modal-dropbox").removeClass("hidden");
+			} else if (which == MODAL_HOTKEYS) {
+				$("#modal-hotkeys").removeClass("hidden");
+			} else {
+				console.log("Error");
+			}
 			$modal.removeClass("hidden");
 		} else {
 			$modal.addClass("hidden");
-			$("#modal-dropbox").addClass("hidden");
-			$("#modal-about").addClass("hidden");
+
 		}
 	}
 
@@ -605,8 +622,6 @@ function initView() {
 							} else {
 								$selection.removeClass("editing");
 							}
-						} else {
-							remove($selection);
 						}
 					}
 					break;
@@ -823,8 +838,7 @@ function initView() {
 				}
 			} else {
 				unrender();
-				$("#modal-dropbox").removeClass("hidden");
-				toggleModal();
+				toggleModal(true, MODAL_DBX);
 			}
 		},
 		update() {

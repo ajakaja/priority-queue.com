@@ -32,14 +32,14 @@ async function initLoggedIn() {
 		setHint("Could not log in. Sorry.");
 		return;
 	}
-	view.toggleLoader();
+	view.toggleLoader(true);
 	fileList = await fs.list();
 	if(fileList.length == 0) {
 		let data = sampleData();
 		await fs.create(data);
 		fileList = [data.filename];
 	}
-	view.toggleLoader();
+	view.toggleLoader(false);
 	let filename;
 	{
 		let lastOpen = Cookies.get(LAST_OPEN_COOKIE)
@@ -128,6 +128,7 @@ async function openFile(filename, create=false) {
 		files[filename] = data;
 	}
 	if(data == null) {
+		view.toggleLoader(false);
 		throw `${filename} could not be opened`;
 	}
 	if(activeList != data) {
@@ -157,7 +158,7 @@ async function loadFile(filename) {
 }
 
 async function deleteFile(filename) {
-	view.toggleLoader();
+	view.toggleLoader(true);
 	if(fileList.includes(filename)) {
 		await fs.delete(filename);
 		fileList.removeElement(filename);
@@ -167,11 +168,11 @@ async function deleteFile(filename) {
 			view.unrender();
 		}
 	}
-	view.toggleLoader();
+	view.toggleLoader(false);
 }
 
 async function renameFile(oldname, newname) {
-	view.toggleLoader();
+	view.toggleLoader(true);
 	let data = await loadFile(oldname);
 	data.newfilename = newname;
 	data.lastmodified = new Date();
@@ -185,7 +186,7 @@ async function renameFile(oldname, newname) {
 		Cookies.set(LAST_OPEN_COOKIE, filename, { expires: 60*60*24*30 });
 	}
 	view.setHint(`renamed '${oldname}' to '${newname}'`);
-	view.toggleLoader();
+	view.toggleLoader(false);
 }
 
 function logout() {
