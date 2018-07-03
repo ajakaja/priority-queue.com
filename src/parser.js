@@ -8,6 +8,20 @@ let parser = (() => {
 	const BLANK = /^\s*$/;
 	const ENTRY_ARCHIVE = new RegExp(/^\*\s/.source + ITEM + "$");
 
+	function sortListByPriority(list) {
+		list.sort((a, b) => {
+			if (a.status == ARCHIVED) {
+				if (b.status == ARCHIVED) {
+					return 0;
+				}
+				return 1;
+			} else if (b.status == ARCHIVED) {
+				return -1;
+			}
+			return a.priority - b.priority;
+		});
+	}
+
 	return {
 		serialize(list) {
 			sortListByPriority(list.elements);

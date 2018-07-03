@@ -59,23 +59,30 @@ a:active {
 	background-color: #acc;
     padding: 20px;
 	max-width: 80%;
-	min-width: 50%;
-	border-radius: 2px;
+	min-width: 45%;
+	border-radius: 3px;
 	font-size: 15px;
 }
 #modal-dropbox {
 	display: flex;
 	flex-direction: column;
 	max-width: 400px;
+	margin: auto;
 }
 #modal-about {
 	height: 100%;
+	margin: auto;
 }
 #modal-hotkeys {
 	min-width: 60%;
 	height: 100%;
+	margin: auto;
 }
 .modal-back {
+	float: right;
+	position: relative;
+}
+#intro-more {
 	float: right;
 	position: relative;
 }
@@ -453,7 +460,7 @@ div.text {
 div.button {
 	padding: 0px 4px 0px 4px;
 }
-div.urgent {
+div.urgent, div.add {
 	font-weight: bold;
 }
 .pqitem div.button {
@@ -476,7 +483,8 @@ div.urgent {
 	color: #ccc;
 }
 .edit:hover,
-.confirm:hover {
+.confirm:hover,
+.add:hover {
 	background: #7d7;
 	opacity: 1.0;
 	color: #ccc;

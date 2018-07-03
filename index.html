@@ -45,11 +45,11 @@
 					
 				<p class="indent">It also eliminates most of the complexity in making an app that runs and stays synchronized across multiple devices. And it makes it easier to give software to the public, since hosting a static site is essentially free. And if I get tired of hosting it someday, anyone else can just do it, since there's no backend required -- or you can run a local version wherever you want.
 
-				<p class="indent">I view creating free Unhosted apps as a mild form of protest. These days everyone wants you to use their product so they can show you pointless ads, and to convince other people you're looking at those ads, and trick you into clicking them, and/or to sell your data to someone else who wants to show you more pointless ads. If we make good, free, low-maintenance-cost versions of everything you need, maybe we can force 'ad-ridden crap' into extinction..</p>
+				<p class="indent">I see creating free Unhosted apps as a mild form of protest. These days everyone wants you to use their product so they can show you pointless ads, and to convince other people you're looking at those ads, and trick you into clicking them, and/or to sell your data to someone else who wants to show you more pointless ads. If we make good, free, low-maintenance-cost versions of everything you need, maybe we can force 'ad-ridden crap' into extinction..</p>
 
 				<hr/>
 
-				<p>Source code available at <a href="https://github.com/ajakaja/priority-queue.com">https://github.com/ajakaja/priority-queue.com</a>. Pull requests welcome.</p>
+				<p>Source code available at <a href="https://github.com/ajakaja/priority-queue.com">https://github.com/ajakaja/priority-queue.com</a>. Pull requests welcome, of course.</p>
 				<p>Or, go see if there's anything on <a href="http://alexkritchevsky.com">my blog</a> yet.</p>
 
 				<p><a href="#" class="modal-back">←back</a></p>
@@ -124,10 +124,11 @@
 					<li class="pqitem" draggable="true">
 						<div class="pqpriority"></div>
 						<div class="text"></div>
-						<div class="urgent button">!</div>
-						<div class="check button">✔</div>
-						<div class="edit button">✎</div>
-						<div class="close button">✗</div>
+						<div class="edit button" title="edit">✎</div>
+						<div class="check button" title="complete">✔</div>
+						<div class="close button" title="delete">✗</div>
+						<div class="urgent button" title="move to top">!</div>
+						<div class="add button" title="add item after">+</div>
 					</li>
 				</template>
 				<li id="additem"><div>+</div></li>

@@ -143,6 +143,20 @@ let parser = (() => {
 	const BLANK = /^\s*$/;
 	const ENTRY_ARCHIVE = new RegExp(/^\*\s/.source + ITEM + "$");
 
+	function sortListByPriority(list) {
+		list.sort((a, b) => {
+			if (a.status == ARCHIVED) {
+				if (b.status == ARCHIVED) {
+					return 0;
+				}
+				return 1;
+			} else if (b.status == ARCHIVED) {
+				return -1;
+			}
+			return a.priority - b.priority;
+		});
+	}
+
 	return {
 		serialize(list) {
 			sortListByPriority(list.elements);
@@ -574,20 +588,6 @@ Array.prototype.removeElement = function(el) {
 	return index;
 }
 
-function sortListByPriority(list) {
-	list.sort((a, b) => {
-		if(a.status == ARCHIVED) {
-			if(b.status == ARCHIVED) {
-				return 0;
-			}
-			return 1;
-		} else if (b.status == ARCHIVED ){
-			return -1;
-		}
-		return a.priority - b.priority;
-	});
-}
-
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
@@ -836,6 +836,15 @@ function initView() {
 		});
 	})();
 
+	function addItem(priority, $location) {
+		const item = new ListItem(NEWTEXT, priority, new Date(), DELETED);
+		activeList.elements.push(item);
+		set(item, "status", INCOMPLETE);
+		let $li = createPQItem(item);
+		$location.before($li);
+		setAsEditing($li);
+	}
+
 	function setupList() {
 		$addButton.click(() => {
 			let lastPriority;
@@ -845,12 +854,7 @@ function initView() {
 			} else {
 				lastPriority = 1;
 			}
-			const item = new ListItem(NEWTEXT, lastPriority, new Date(), DELETED);
-			activeList.elements.push(item);
-			set(item, "status", INCOMPLETE);
-			let $li = createPQItem(item);
-			$addButton.before($li);
-			setAsEditing($li);
+			addItem(lastPriority, $addButton);
 		});
 
 		setupDrag();
@@ -1066,7 +1070,6 @@ function initView() {
 		$("li.fileitem").remove();
 	}
 
-
 	function renderList() {
 		$filename.text(activeList.filename);
 		$("li.pqitem").remove();
@@ -1124,12 +1127,11 @@ function initView() {
 		if(e.which == ENTER && !e.shiftKey) {
 			removeEditing($(this).closest("li.pqitem"));
 			e.preventDefault();
+			e.stopPropagation();
 		}
 		if(e.which == ESCAPE) {
-			removeEditing($(this).closest("li.pqitem"));
 			e.preventDefault();
 		}
-		e.stopPropagation();
 	}
 
 	function mousedownHandler(e) {
@@ -1157,6 +1159,13 @@ function initView() {
 				resetPriorities();
 				$this.detach().insertBefore($first);
 			}
+			return false;
+		}
+		if($target.is("div.add")) {
+			let priority = getPriority($this);
+			let $next = $this.next();
+			addItem(priority+0.5, $next);
+			resetPriorities();
 			return false;
 		}
 
@@ -1379,8 +1388,10 @@ function initView() {
 							if(getText($selection) == NEWTEXT) {
 								remove($selection);
 							} else {
-								$selection.removeClass("editing");
+								removeEditing($selection);
 							}
+						} else {
+							setSelection(null);
 						}
 					}
 					break;

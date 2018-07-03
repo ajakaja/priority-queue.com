@@ -35,20 +35,6 @@ Array.prototype.removeElement = function(el) {
 	return index;
 }
 
-function sortListByPriority(list) {
-	list.sort((a, b) => {
-		if(a.status == ARCHIVED) {
-			if(b.status == ARCHIVED) {
-				return 0;
-			}
-			return 1;
-		} else if (b.status == ARCHIVED ){
-			return -1;
-		}
-		return a.priority - b.priority;
-	});
-}
-
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
