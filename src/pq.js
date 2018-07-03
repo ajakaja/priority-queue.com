@@ -55,16 +55,16 @@ async function initLoggedIn() {
 	await openFile(filename, false);
 	startSaving();
 	window.onhashchange = e => {
-		let filename = getHash(); //the #filename section of the URL
+		let filename = getHash();
 		if(filename && activeList && activeList.filename != filename && fileList.includes(filename)) {
 			openFile(filename, false);
 		}
 	};
-	$(window).on("beforeunload", async e => {
+	$(window).on("beforeunload", e => {
 		if(__edited) {
-			await fs.save(activeList);
+			return "Do you want to save first?";
 		} else {
-			return;
+			return undefined;
 		}
 	});
 }
