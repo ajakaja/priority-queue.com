@@ -835,6 +835,7 @@ function initView() {
 					renderList();
 					renderName();
 					window.location.hash = activeList.filename;
+					document.title = activeList.filename;
 				}
 			} else {
 				unrender();
