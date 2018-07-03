@@ -69,7 +69,15 @@ a:active {
 }
 #modal-about {
 	height: 100%;
-	font-size: 14px;
+	font-size: 15px;
+}
+.modal-back {
+	float: right;
+	position: relative;
+}
+h1 {
+	text-align: center;
+	
 }
 #dropbox-button {
 	border: 1px solid transparent;

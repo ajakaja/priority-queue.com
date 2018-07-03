@@ -816,7 +816,7 @@ function initView() {
 			$("#modal-about").removeClass("hidden");
 			return false;
 		});
-		$("#modal-back").click(e => {
+		$(".modal-back").click(e => {
 			if(fs.isAuthed()) {
 				toggleModal();
 			} else {

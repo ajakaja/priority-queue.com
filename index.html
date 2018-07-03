@@ -24,29 +24,36 @@
 
 				<p>Connect a Dropbox account:</p>
 				<a href="" id="dropbox-auth">
-					<img src="dropbox-icon.svg" id="dropbox-button" width="80px" height="80px"/>
+					<svg width="80" height="80" id="dropbox-button">
+						<use xlink:href="#dropboxicon" />
+					</svg>
 				</a>
 
 				<p>(or just <a href="#" id="dummy-login">mess around</a> offline)</p>
 
 				<p><a href="#" id="intro-more">more...</a></p>
-
 			</div>
 			<div id="modal-about" class="hidden">
-				<h1>About</h1>
+				<h1>About PQ</h1>
 				<p>Priority-Queue.com is a minimalistic To-Do List app. It's for managing your priorities. In a queue.</p>
-				<p class="indent">It uses the <a href="https://unhosted.org/">Unhosted</a> architecture: the website is completely static, and your data is stored in a place of your choosing. I use Dropbox for personal storage so I've set it up to use that for now, but there's no reason it couldn't use any other internet-accessible file system.</p>
+				<p class="indent">It follows the <a href="https://unhosted.org/">Unhosted</a> architecture: the website is completely static HTML, JS, and CSS, and your personal data is stored in a place of your choosing. I use Dropbox for personal storage so I've implemented bindings for it, but there's no reason the site couldn't use any other internet-accessible file storage.</p>
 
-				<p class="indent">I love and strongly endorse the Unhosted style for app architecture. Data is entirely owned by the user, at least in the sense that it never passes through a server owned by the app (Dropbox still has your data, but at least you don't have to trust a <em>new</em> entity to use the app). It also eliminates most of the complexity in making an app that runs and stays synchronized across multiple devices. And it makes it easier to give software to the public, since hosting a static site is free or at least very cheap. And if I get tired of hosting it someday, anyone else can just do it, since there's no backend required. Or you can run a local version any time you want.
+				<p class="indent">I love, and strongly endorse, the Unhosted style for app architecture. Data is entirely owned by the user, at least in the sense that it never passes through a server owned by the app (Dropbox of course still has your data, but at least you don't have to trust a <em>new</em> entity to use the app). It also eliminates most of the complexity in making an app that runs and stays synchronized across multiple devices. And it makes it easier to give software to the public, since hosting a static site is essentially free. And if I get tired of hosting it someday, anyone else can just do it, since there's no backend required -- or you can run a local version wherever you want.
 
-				<p class="indent">I see creating unhosted free apps as a mild form of protest. These days everyone wants you to use their product so they can show you pointless ads, and then convince other people you're looking at those ads, and trick you into clicking them, and/or sell your data to someone else who wants to show you more pointless ads. If we make good, free, low-maintenance-cost versions of everything you need, those ad-ridden apps might die out.</p>
+				<p class="indent">I view creating free Unhosted apps as a mild form of protest. These days everyone wants you to use their product so they can show you pointless ads, and to convince other people you're looking at those ads, and trick you into clicking them, and/or to sell your data to someone else who wants to show you more pointless ads. If we make good, free, low-maintenance-cost versions of everything you need, maybe we can force 'ad-ridden crap' into extinction..</p>
 
 				<hr/>
 
 				<p>Source code available at <a href="https://github.com/ajakaja/priority-queue.com">https://github.com/ajakaja/priority-queue.com</a>.</p>
-				<p>Or... go see if there's anything on <a href="http://alexkritchevsky.com">my blog</a> yet!</p>
+				<p>Or... go see if there's anything on <a href="http://alexkritchevsky.com">my blog</a> yet.</p>
 
-				<p><a href="#" id="modal-back">←back</a></p>
+				<p><a href="#" class="modal-back">←back</a></p>
+			</div>
+			<div id="modal-hotkeys" class="hidden">
+				<h1> Hotkeys </h1>
+				<ul>
+					<li></li>
+				</ul>
 			</div>
 		</div>
 	</div>
@@ -119,6 +126,21 @@
 		</symbol>
 		<symbol id="saveicon" viewBox="0 0 30 30">
 			<path d="M22,4h-2v6c0,0.552-0.448,1-1,1h-9c-0.552,0-1-0.448-1-1V4H6C4.895,4,4,4.895,4,6v18c0,1.105,0.895,2,2,2h18  c1.105,0,2-0.895,2-2V8L22,4z M22,24H8v-6c0-1.105,0.895-2,2-2h10c1.105,0,2,0.895,2,2V24z"/><rect height="5" width="2" x="16" y="4"/>
+		</symbol>
+		<symbol id="dropboxicon" viewBox="0 0 235.45 200">
+			<defs>
+				<style>
+					.cls-1 {
+						fill: #0061ff;
+					}
+				</style>
+			</defs>
+			<title>DropboxGlyph</title>
+			<polygon class="cls-1" points="58.86 0 0 37.5 58.86 75 117.73 37.5 58.86 0" />
+			<polygon class="cls-1" points="176.59 0 117.73 37.5 176.59 75 235.45 37.5 176.59 0" />
+			<polygon class="cls-1" points="0 112.5 58.86 150 117.73 112.5 58.86 75 0 112.5" />
+			<polygon class="cls-1" points="176.59 75 117.73 112.5 176.59 150 235.45 112.5 176.59 75" />
+			<polygon class="cls-1" points="58.86 162.5 117.73 200 176.59 162.5 117.73 125 58.86 162.5" />
 		</symbol>
 	</svg>
 </body>
