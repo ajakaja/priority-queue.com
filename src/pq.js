@@ -165,7 +165,7 @@ async function deleteFile(filename) {
 		files[filename] = null;
 		if(activeList.filename == filename) {
 			activeList = null;
-			view.unrender();
+			view.render();
 		}
 	}
 	view.toggleLoader(false);

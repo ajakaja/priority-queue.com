@@ -266,8 +266,9 @@ function initView() {
 			return false;
 		});
 		$confirm.mousedown(e => {
-			deleteFile(getText($li))
-				.then(() => $li.detach());
+			let text = getText($li);
+			$li.detach();
+			deleteFile(text);
 			return false;
 		});
 		$cancel.mousedown(e => {
@@ -299,14 +300,18 @@ function initView() {
 		}
 		$save.addClass("shown");
 	}
-	function unrender() {
+	function unrenderList() {
 		$("li.pqitem").remove();
-		$("li.fileitem").remove();
 		$filename.text("");
 		if(colors) {
 			setColors(false);
 		}
 	}
+
+	function unrenderFiles() {
+		$("li.fileitem").remove();
+	}
+
 
 	function renderList() {
 		$filename.text(activeList.filename);
@@ -836,9 +841,12 @@ function initView() {
 					renderName();
 					window.location.hash = activeList.filename;
 					document.title = activeList.filename;
+				} else {
+					unrenderList();
 				}
 			} else {
-				unrender();
+				unrenderList();
+				unrenderFiles();
 				toggleModal(true, MODAL_DBX);
 			}
 		},
