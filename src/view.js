@@ -370,9 +370,11 @@ function initView() {
 	} 
 
 	function editHandler(e) {
-		if(e.which == ENTER && !e.shiftKey) {
-			removeEditing($(this).closest("li.pqitem"));
-			e.preventDefault();
+		if(e.which == ENTER) {
+			if(!e.shiftKey) {
+				removeEditing($(this).closest("li.pqitem"));
+				e.preventDefault();
+			}
 			e.stopPropagation();
 		}
 		if(e.which == ESCAPE) {
@@ -586,9 +588,10 @@ function initView() {
 	function setupHotkeys() {
 		$(document).keydown(e => {
 			let $selection = $("li.selected");
+			let hasSelection = ($selection.length != 0);
 			switch (e.which) {
 				case UP:
-					if($selection.length == 0) {
+					if (!hasSelection) {
 						setSelection($ul.find("li.pqitem").last());
 					} else {
 						let $prev = $selection.prev("li.pqitem");
@@ -601,7 +604,7 @@ function initView() {
 					e.preventDefault();
 					break;
 				case DOWN:
-					if($selection.length == 0) {
+					if (!hasSelection) {
 						setSelection($ul.find("li.pqitem").first());
 					} else {
 						let $next = $selection.next("li.pqitem");
@@ -614,22 +617,32 @@ function initView() {
 					e.preventDefault();
 					break;
 				case ENTER:
-					if($selection.length != 0) {
-						let status = getStatus($selection);
-						if(status == INCOMPLETE) {
-							setStatus($selection, COMPLETE);
-						} else if(status == COMPLETE) {
-							setStatus($selection, INCOMPLETE);
-						}		
+					if (hasSelection && !$selection.hasClass("editing")) {
+						let priority = getPriority($selection) + 0.5;
+						let $next = $selection.next();
+						addItem(priority, $next);
 					}
+					e.preventDefault();
+					break;
+				case SPACE:
+					if (hasSelection) {
+						let status = getStatus($selection);
+						if (status == INCOMPLETE) {
+							setStatus($selection, COMPLETE);
+						} else if (status == COMPLETE) {
+							setStatus($selection, INCOMPLETE);
+						}
+					}
+					e.preventDefault();
 					break;
 				case DELETE:
-					if($selection.length != 0 && !$selection.hasClass("editing")) {
+					if (hasSelection && !$selection.hasClass("editing")) {
 						remove($selection);
 					}
+					e.preventDefault();
 					break;
 				case ESCAPE:
-					if($selection.length != 0) {
+					if (hasSelection) {
 						if($selection.hasClass("editing")) {
 							if(getText($selection) == NEWTEXT) {
 								remove($selection);
