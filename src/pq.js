@@ -12,8 +12,8 @@ let saving = false;
 
 $(() => {
 	if (!("content" in document.createElement("template"))) {
-		alert("your browser's too old for this. sorry. I made this for personal use"
-			+ " so I'm not really trying to make it work for everyone.");
+		alert("your browser's too old for this. sorry. I made this for personal use" + 
+			" so I'm not really trying to make it work for everyone.");
 		return;
 	}
 	fs = initializeDropbox();

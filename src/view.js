@@ -377,6 +377,9 @@ function initView() {
 			}
 			e.stopPropagation();
 		}
+		if(e.which == SPACE) {
+			e.stopPropagation();
+		}
 		if(e.which == ESCAPE) {
 			e.preventDefault();
 		}
