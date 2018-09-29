@@ -1131,12 +1131,6 @@ function initView() {
 			}
 			e.stopPropagation();
 		}
-		if(e.which == SPACE) {
-			e.stopPropagation();
-		}
-		if(e.which == ESCAPE) {
-			e.preventDefault();
-		}
 	}
 
 	function mousedownHandler(e) {
@@ -1156,14 +1150,6 @@ function initView() {
 		}
 		if($target.is("div.close")) {
 			remove($this);
-			return false;
-		}
-		if($target.is("div.urgent")) {
-			let $first = $("li.pqitem").first();
-			if(!$this.is($first)) {
-				resetPriorities();
-				$this.detach().insertBefore($first);
-			}
 			return false;
 		}
 		if($target.is("div.add")) {
@@ -1378,25 +1364,25 @@ function initView() {
 						let priority = getPriority($selection) + 0.5;
 						let $next = $selection.next();
 						addItem(priority, $next);
+						e.preventDefault();
 					}
-					e.preventDefault();
 					break;
 				case SPACE:
-					if (hasSelection) {
+					if (hasSelection && !$selection.hasClass("editing")) {
 						let status = getStatus($selection);
 						if (status == INCOMPLETE) {
 							setStatus($selection, COMPLETE);
 						} else if (status == COMPLETE) {
 							setStatus($selection, INCOMPLETE);
 						}
+						e.preventDefault();
 					}
-					e.preventDefault();
 					break;
 				case DELETE:
 					if (hasSelection && !$selection.hasClass("editing")) {
 						remove($selection);
+						e.preventDefault();
 					}
-					e.preventDefault();
 					break;
 				case ESCAPE:
 					if (hasSelection) {
