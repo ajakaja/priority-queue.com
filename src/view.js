@@ -1,6 +1,10 @@
-"use strict";
+const $ = require("jquery-slim");
+const Types = require("./types.js");
+const Cookies = require("cookies-js");
+const List = Types.List;
+const ListItem = Types.ListItem;
 
-function initView() {
+module.exports = function(pq) {
 
 	const ENTER = 13;
 	const DELETE = 8;
@@ -45,13 +49,12 @@ function initView() {
 	let toggleLoader = (toggle) => $loader.toggleClass("hidden", !toggle);
 
 	(function setupModal() {
-		$("#dropbox-auth").attr("href", fs.getAuthLink());
+		$("#dropbox-auth").attr("href", pq.dropbox.getAuthLink());
 
 		$modal.click(e => {
 			if($(e.target).is($modal)) {
-				if(!fs.isAuthed()) {
-					fs = initializeDummyFilesystem();
-					initLoggedIn();
+				if(!pq.dropbox.isAuthed()) {
+					pq.initLoggedIn(pq.demo);
 					setHint("Offline. Not actually saving anything.");
 				} else {
 				}
@@ -66,7 +69,7 @@ function initView() {
 			return false;
 		});
 		$(".modal-back").click(e => {
-			if(fs.isAuthed()) {
+			if(pq.dropbox.isAuthed()) {
 				toggleModal(false);
 			} else {
 				$("#modal-dropbox").removeClass("hidden");
@@ -74,18 +77,71 @@ function initView() {
 			}
 			return false;
 		});
-		$("#dummy-login").click(e => {
-			fs = initializeDummyFilesystem();
+		$("#demo-login").click(e => {
 			toggleModal(false);
-			initLoggedIn();
+			pq.initLoggedIn(pq.demo);
 			setHint("Offline. Not actually saving anything.");
 		});
 	})();
 
+
+	const primes = [17, 31, 43, 71, 83, 101];
+
+	function hashNines(str) {
+		let hash = 0, char;
+		for(let i = 0; i < str.length; i++) {
+			char = str.charCodeAt(i);
+			//each character cycles the range at a different speed.. ish
+			hash = (hash + char * primes[i % primes.length]) % 729;
+		}
+		return [hash % 9, Math.floor(hash / 9) % 9, Math.floor(hash / 81)];
+	}
+
+	// Generate an interesting color from a string
+	function colorScheme(str) {
+		let hashes = hashNines(str);
+		let r = 100 + 15 * hashes[1];
+		let g = 100 + 15 * hashes[2];
+		let b = 100 + 15 * hashes[0];
+		let lightColor = `rgb(${r},${g},${b})`;
+		let lighterColor = `rgb(${r+20},${g+20},${b+20})`;
+		let darkColor = `rgb(${r-60},${g-60},${b-60})`;
+		return [lightColor, darkColor, lighterColor];
+	}
+
+	function toggle(status) {
+		if(status == Types.INCOMPLETE) {
+			return Types.COMPLETE;
+		}
+		if(status == Types.COMPLETE) {
+			return Types.INCOMPLETE;
+		}
+		return null;
+	}
+
+	const FILENAME = /^\w+\.txt$/;
+	const PREFIX = /^\w+$/;
+
+	function validFilename(filename) {
+		if(FILENAME.test(filename)) {
+			return filename;
+		} else if(PREFIX.test(filename)) {
+			return filename + ".txt";
+		} else {
+			return false;
+		}
+	}
+
+	function isOffscreen($el) {
+		let rect = $el[0].getBoundingClientRect();
+		let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+		return (rect.bottom < 0 || rect.top - viewHeight >= 0);
+	}
+
 	function addItem(priority, $location) {
-		const item = new ListItem(NEWTEXT, priority, new Date(), DELETED);
-		activeList.elements.push(item);
-		set(item, "status", INCOMPLETE);
+		const item = new ListItem(NEWTEXT, priority, new Date(), Types.DELETED);
+		pq.getActiveList().elements.push(item);
+		pq.set(item, "status", Types.INCOMPLETE);
 		let $li = createPQItem(item);
 		$location.before($li);
 		setAsEditing($li);
@@ -123,7 +179,7 @@ function initView() {
 					$li.appendTo($files);
 					$newfile.text("");
 					$filemenu.removeClass("open");
-					openFile(validname, true);
+					pq.openFile(validname, true);
 				} else {
 					setHint("filenames must be alphanumeric + .txt");
 					$newfile.text("");
@@ -132,7 +188,7 @@ function initView() {
 			}
 			e.stopPropagation();
 		}).mousedown(e => {
-			if(e.button != 0) {
+			if(e.button !== 0) {
 				$filemenu.addClass("open");
 				return false;
 			}
@@ -150,16 +206,16 @@ function initView() {
 			$("#settings").removeClass("open");
 		});
 		$("#settingsbutton").mousedown(e => {
-			if(e.button != 0) {
+			if(e.button !== 0) {
 				return false;
 			}
 			$(".open").removeClass("open");
 			$("#settings").toggleClass("open");
 			return false;
 		});
-		createMenuButton("#logout", logout);
+		createMenuButton("#logout", pq.logout);
 		createMenuButton("#login", () => toggleModal(true, MODAL_DBX));
-		createMenuButton("#archive", archiveCompleted);
+		createMenuButton("#archive", pq.archiveCompleted);
 		createMenuButton("#colorize", enableColors);
 		createMenuButton("#decolorize", disableColors);
 		createMenuButton("#about", () => {
@@ -170,7 +226,7 @@ function initView() {
 			$(".open").removeClass("open");
 			$("#modal-hotkeys").removeClass("hidden");
 			toggleModal(true, MODAL_HOTKEYS);
-		})
+		});
 		if(Cookies.get(COLOR_COOKIE) == "true") {
 			colors = true;
 		}
@@ -178,7 +234,7 @@ function initView() {
 
 	function createMenuButton(id, fn) {
 		$(id).mousedown(e => {
-			if(e.button != 0) {
+			if(e.button !== 0) {
 				return false;
 			}
 			fn();
@@ -202,7 +258,7 @@ function initView() {
 			$("#modal-about").addClass("hidden");
 			$("#modal-hotkeys").addClass("hidden");
 			if(which == MODAL_ABOUT) {
-				$("#modal-about").removeClass("hidden")
+				$("#modal-about").removeClass("hidden");
 			} else if (which == MODAL_DBX) {
 				$("#modal-dropbox").removeClass("hidden");
 			} else if (which == MODAL_HOTKEYS) {
@@ -234,7 +290,7 @@ function initView() {
 				if(!!newname) {
 					removeEditing($li);
 					setText($li, newname);
-					renameFile(oldname, newname).then(() => {
+					pq.renameFile(oldname, newname).then(() => {
 						$li.data(filename, newname);
 						$filemenu.removeClass("open");
 					});
@@ -246,18 +302,18 @@ function initView() {
 			e.stopPropagation();
 		});
 		$li.mousedown(e => {
-			if(e.button != 0) {
+			if(e.button !== 0) {
 				$filemenu.addClass("open");
 				return false;
 			}
-			openFile(getText($li));
+			pq.openFile(getText($li));
 			$filemenu.removeClass("open");
 			return false;
 		});
 		$li.find("div.edit").mousedown(e => {
 			setAsEditing($li);
 			$filemenu.addClass("open");
-			return false
+			return false;
 		});
 		let $delete = $li.find("div.delete"),
 			$cancel = $li.find("div.cancel"),
@@ -288,6 +344,7 @@ function initView() {
 		return filename.split(".")[0];
 	}
 	function renderName() {
+		let activeList = pq.getActiveList();
 		if(colors) {
 			setColors(activeList.filename);
 		} else {
@@ -298,8 +355,8 @@ function initView() {
 			$filename.addClass("shown");
 		}
 		$("li.fileitem").remove();
-		fileList.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-		for(let i of fileList) {
+		pq.getFileList().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+		for(let i of pq.getFileList()) {
 			createFileItem(i).appendTo($files);
 		}
 		$save.addClass("shown");
@@ -317,15 +374,16 @@ function initView() {
 	}
 
 	function renderList() {
+		let activeList = pq.getActiveList();
 		$filename.text(activeList.filename);
 		$("li.pqitem").remove();
 		activeList.elements
-			.filter(e => e.status != ARCHIVED && e.status != DELETED)
+			.filter(e => e.status != Types.ARCHIVED && e.status != Types.DELETED)
 			.forEach(li => $addButton.before(createPQItem(li)));
 	}
 	function rerenderList() {
 		let $lis = $("li.pqitem");
-		let statuses = [COMPLETE, INCOMPLETE];
+		let statuses = [Types.COMPLETE, Types.INCOMPLETE];
 
 		let changedPriority = false;
 		$lis.each((i, li) => {
@@ -341,7 +399,7 @@ function initView() {
 			}
 		});
 		if(changedPriority) {
-			$lis = $lis.sort( (a, b) => getPriority($(a)) - getPriority($(b)))
+			$lis = $lis.sort( (a, b) => getPriority($(a)) - getPriority($(b)));
 		}
 		$lis.detach()
 			.filter((i, e) => statuses.includes(getStatus($(e))))
@@ -382,7 +440,7 @@ function initView() {
 	function mousedownHandler(e) {
 		let $target = $(e.target);
 		let $this = $(this);
-		if(e.button != 0) {
+		if(e.button !== 0) {
 			return;
 		}
 		if($target.is("div.edit")) {
@@ -423,7 +481,7 @@ function initView() {
 	function mouseupHandler(e) {
 		let now = Date.now();
 		let $this = $(this);
-		if(e.button != 0) {
+		if(e.button !== 0) {
 			return;
 		}
 		if(now - holdStart < holdTime) {
@@ -577,7 +635,7 @@ function initView() {
 	function setupHotkeys() {
 		$(document).keydown(e => {
 			let $selection = $("li.selected");
-			let hasSelection = ($selection.length != 0);
+			let hasSelection = ($selection.length !== 0);
 			switch (e.which) {
 				case UP:
 					if (!hasSelection) {
@@ -616,10 +674,10 @@ function initView() {
 				case SPACE:
 					if (hasSelection && !$selection.hasClass("editing")) {
 						let status = getStatus($selection);
-						if (status == INCOMPLETE) {
-							setStatus($selection, COMPLETE);
-						} else if (status == COMPLETE) {
-							setStatus($selection, INCOMPLETE);
+						if (status == Types.INCOMPLETE) {
+							setStatus($selection, Types.COMPLETE);
+						} else if (status == Types.COMPLETE) {
+							setStatus($selection, Types.INCOMPLETE);
 						}
 						e.preventDefault();
 					}
@@ -646,16 +704,16 @@ function initView() {
 				case Z:
 					if(e.metaKey || e.ctrlKey) {
 						if(e.shiftKey) {
-							redo();
+							pq.redo();
 						} else {
-							undo();
+							pq.undo();
 						}
 						return false;
 					}
 					break;
 				case S:
 					if(e.metaKey || e.ctrlKey) {
-						save();
+						pq.saveFile();
 						return false;
 					}
 				break;
@@ -682,10 +740,10 @@ function initView() {
 	function swap($a, $b) {
 		let pA = getPriority($a);
 		let pB = getPriority($b);
-		startSequence();
+		pq.startSequence();
 		setPriority($a, pB);
 		setPriority($b, pA);
-		endSequence();
+		pq.endSequence();
 		let $tmp = $('<span>').hide();
 		$a.before($tmp);
 		$b.before($a);
@@ -711,12 +769,12 @@ function initView() {
 	}
 
 	function renderStatus($li, status) {
-		if(status == COMPLETE) {
-			$li.removeClass(INCOMPLETE);
-			$li.addClass(COMPLETE);
-		} else if(status == INCOMPLETE) {
-			$li.removeClass(COMPLETE);
-			$li.addClass(INCOMPLETE);
+		if(status == Types.COMPLETE) {
+			$li.removeClass(Types.INCOMPLETE);
+			$li.addClass(Types.COMPLETE);
+		} else if(status == Types.INCOMPLETE) {
+			$li.removeClass(Types.COMPLETE);
+			$li.addClass(Types.INCOMPLETE);
 		}
 	}
 
@@ -725,12 +783,12 @@ function initView() {
 	}
 
 	function priorityText(status, priority) {
-		return (status == COMPLETE) ? "✔" : priority;
+		return (status == Types.COMPLETE) ? "✔" : priority;
 	}
 	function setStatus($li, status) {
 		let item = $li.data("item");
 		if(item.status != status) {
-			set(item, "status", status);
+			pq.set(item, "status", status);
 		}
 		renderStatus($li, status);
 		renderPriority($li, status, item.priority);
@@ -751,7 +809,7 @@ function initView() {
 		let item = $li.data("item");
 		if(item) {
 			if(item.text != text) {
-				set(item, "text", text);
+				pq.set(item, "text", text);
 			}
 		}
 	}
@@ -806,7 +864,7 @@ function initView() {
 			return
 		} else {
 			let item = $li.data("item");
-			set(item, "priority", priority);
+			pq.set(item, "priority", priority);
 			renderPriority($li, item.status, priority);
 		}
 	}
@@ -818,7 +876,7 @@ function initView() {
 	}
 	function remove($li) {
 		let item = $li.data("item");
-		set(item, "status", DELETED);
+		pq.set(item, "status", Types.DELETED);
 		$li.detach();
 	}
 	function setHint(text, repeat=true) {
@@ -849,6 +907,8 @@ function initView() {
 		toggleLoader: toggleLoader,
 		render(loggedIn=true) {
 			if(loggedIn) {
+				let activeList = pq.getActiveList();
+
 				if(activeList) {
 					renderList();
 					renderName();
@@ -886,5 +946,5 @@ function initView() {
 			$("#login").toggleClass("hidden", loggedIn);
 			$("#logout").toggleClass("hidden", !loggedIn);
 		}
-	}
-}
+	};
+};

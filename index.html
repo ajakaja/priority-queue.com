@@ -9,9 +9,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	<link rel="stylesheet" href="style.css">
-
-    <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
-	<script src="https://code.jquery.com/jquery-3.2.1.slim.js"></script>
 	<script src="bundle.js"></script>
 
 </head>
@@ -31,7 +28,7 @@
 					</svg>
 				</a>
 
-				<p>(or just <a href="#" id="dummy-login">mess around</a> offline)</p>
+				<p>(or just <a href="#" id="demo-login">mess around</a> offline)</p>
 
 				<p><a href="#" id="intro-more">more info...</a></p>
 			</div>
@@ -128,7 +125,7 @@
 						<div class="text"></div>
 						<div class="edit button" title="edit">✎</div>
 						<div class="check button" title="complete">✔</div>
-						<div class="close button" title="delete">✗</div>
+						<div class="close button" title="delete"><svg width="20" height="20"><use xlink:href="#trashicon" /></svg></div>
 						<div class="add button" title="add item after">+</div>
 					</li>
 				</template>
@@ -138,8 +135,10 @@
 		<div class="hint" ></div>
 	</div>
 	<svg style="display: none">
-		<symbol id="trashicon" viewBox="0 0 30 30">
-			<path d="M19.71,26h-9.42c-1.019,0-1.875-0.766-1.988-1.779L6.5,8h17l-1.802,16.221C21.585,25.234,20.729,26,19.71,26z"/><path d="M24,6H6C5.448,6,5,5.552,5,5v0c0-0.552,0.448-1,1-1h18c0.552,0,1,0.448,1,1v0C25,5.552,24.552,6,24,6z"/><path d="M18,5h-6V4c0-0.552,0.448-1,1-1h4c0.552,0,1,0.448,1,1V5z"/>
+		<symbol id="trashicon" width="30" height="30" viewBox="0 0 30 20">
+			<path d="m17.210041,24.500025l-9.42,0c-1.019,0 -1.875,-0.766 -1.988,-1.779l-1.802,-16.221l17,0l-1.802,16.221c-0.113,1.013 -0.969,1.779 -1.988,1.779z"/>
+  			<path d="m21.500041,4.500025l-18,0c-0.552,0 -1,-0.448 -1,-1l0,0c0,-0.552 0.448,-1 1,-1l18,0c0.552,0 1,0.448 1,1l0,0c0,0.552 -0.448,1 -1,1z"/>
+  			<path d="m15.500041,3.500025l-6,0l0,-1c0,-0.552 0.448,-1 1,-1l4,0c0.552,0 1,0.448 1,1l0,1z"/>
 		</symbol>
 		<symbol id="saveicon" viewBox="0 0 30 30">
 			<path d="M22,4h-2v6c0,0.552-0.448,1-1,1h-9c-0.552,0-1-0.448-1-1V4H6C4.895,4,4,4.895,4,6v18c0,1.105,0.895,2,2,2h18  c1.105,0,2-0.895,2-2V8L22,4z M22,24H8v-6c0-1.105,0.895-2,2-2h10c1.105,0,2,0.895,2,2V24z"/><rect height="5" width="2" x="16" y="4"/>

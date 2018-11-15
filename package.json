@@ -2,31 +2,23 @@
   "name": "priority-queue.com",
   "version": "1.0.0",
   "description": "A priority queue for keeping track of your priorities",
-  "main": "cookie.js",
+  "main": "src/pq.js",
   "dependencies": {
-    "concat": "^1.0.3",
     "cookies-js": "^1.2.3",
     "dropbox": "^2.5.12",
     "jquery-slim": "^3.0.0",
-    "npm-watch": "^0.3.0"
+    "npm": "^6.4.1",
+    "strictify": "^0.2.0"
   },
+  "license": "UNLICENSED",
   "devDependencies": {},
-  "watch": {
-    "build": "src/*.js"
-  },
   "scripts": {
-    "build": "./build",
-    "watch": "npm-watch build"
+    "build": "browserify -t strictify src/pq.js -o bundle.js",
+    "debug": "browserify -t strictify src/pq.js -o bundle.js --debug --verbose",
+    "watch": "watchify -t strictify src/pq.js -o bundle.js --debug --verbose"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ajakaja/priority-queue.com.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ajakaja/priority-queue.com/issues"
-  },
-  "homepage": "https://github.com/ajakaja/priority-queue.com#readme"
+  }
 }

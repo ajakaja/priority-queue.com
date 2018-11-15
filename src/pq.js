@@ -1,4 +1,13 @@
-"use strict";
+const $ = require("jquery-slim");
+
+const initializeDropbox = require("./dbx.js");
+const initializeDemo = require("./demo-fs.js");
+const initView = require("./view.js");
+const Types = require("./types.js");
+const Cookies = require("cookies-js");
+
+const List = Types.List;
+const ListItem = Types.ListItem;
 
 const LAST_OPEN_COOKIE = "last-open";
 const lists = [];
@@ -13,21 +22,66 @@ let saving = false;
 $(() => {
 	if (!("content" in document.createElement("template"))) {
 		alert("your browser's too old for this. sorry. I made this for personal use" + 
-			" so I'm not really trying to make it work for everyone.");
+			" so I haven't had time to make it work for everyone.");
 		return;
 	}
-	fs = initializeDropbox();
-	view = initView();
-	if(!fs.isAuthed()) {
+
+	let dropbox = initializeDropbox();
+	let demo = initializeDemo();
+
+	const controller = {
+		getActiveList: getActiveList,
+		getFileList: getFileList,
+		initLoggedIn: initLoggedIn,
+		openFile: openFile,
+		saveFile: saveFile,
+		renameFile: renameFile,
+		loadFile: loadFile,
+		logout: logout,
+		undo: undo,
+		redo: redo,
+		set: set,
+		startSequence: startSequence,
+		endSequence: endSequence,
+		archiveCompleted: archiveCompleted,
+		dropbox: dropbox,
+		demo: demo
+	};
+
+	view = initView(controller);
+	if(!dropbox.isAuthed()) {
 		view.setLoggedIn(false);
 		view.render(false);
 	} else {
 		view.setLoggedIn(true);
-		initLoggedIn();
+		initLoggedIn(dropbox);
 	}
 });
 
-async function initLoggedIn() {
+
+
+function getActiveList() {
+	return activeList;
+}
+function getFileList() {
+	return fileList;
+}
+
+
+
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+function sampleData(filename="todo.txt") {
+	let item = new ListItem("edit this, or add new items below", 1, new Date(), Types.INCOMPLETE);
+	let data = new List([item], "todo.txt", new Date());
+	return data;
+}
+
+async function initLoggedIn(filesystem) {
+	fs = filesystem;
 	if (!fs.isLoaded()) {
 		setHint("Could not log in. Sorry.");
 		return;
@@ -82,7 +136,7 @@ let lastEdit = null;
 let __edited = false;
 
 function setEditedFlag() {
-	if(deltasSinceSave != 0) {
+	if(deltasSinceSave !== 0) {
 		view.setEdited(true);
 		__edited = true;
 		lastEdit = Date.now();
@@ -97,17 +151,18 @@ function startSaving() {
 	window.setInterval(() => {
 		let now = Date.now();
 		if(__edited && now - lastEdit > 5000 && !view.isEditing()) {
-			save();
+			saveFile();
 		}
 	}, 1000);
 }
 
-async function save() {
+async function saveFile() {
 	saving = true;
 	view.toggleSaving();
 	__edited = false;
 	activeList.lastmodified = new Date();
-	await fs.save(activeList);
+	let message = await fs.save(activeList);
+	view.setHint(message);
 	deltasSinceSave = 0;
 	view.setEdited(false);
 	view.toggleSaving();
@@ -117,7 +172,7 @@ async function openFile(filename, create=false) {
 	let data, errors;
 	view.toggleLoader(true);
 	if(__edited) {
-		save();
+		saveFile();
 	}
 	if(fileList.includes(filename)) {
 		data = await loadFile(filename);
@@ -157,11 +212,20 @@ async function loadFile(filename) {
 	return data;
 }
 
+function removeElement(arr, el) {
+	let index = arr.indexOf(el);
+	if(index == -1) {
+		return null;
+	}
+	arr.splice(index, 1);
+	return index;
+}
+
 async function deleteFile(filename) {
 	view.toggleLoader(true);
 	if(fileList.includes(filename)) {
 		await fs.delete(filename);
-		fileList.removeElement(filename);
+		removeElement(fileList, filename);
 		files[filename] = null;
 		if(activeList.filename == filename) {
 			activeList = null;
@@ -191,7 +255,7 @@ async function renameFile(oldname, newname) {
 
 function logout() {
 	if(__edited) {
-		save();
+		saveFile();
 	}
 	fs.logout();
 	window.location.hash = "";
@@ -278,10 +342,63 @@ function redo() {
 
 function archiveCompleted() {
 	startSequence();
-	let completed = activeList.elements.filter(e => e.status == COMPLETE);
+	let completed = activeList.elements.filter(e => e.status == Types.COMPLETE);
 	for(let el of completed) {
-		set(el, "status", ARCHIVED);
+		set(el, "status", Types.ARCHIVED);
 	}
 	endSequence();
 	view.update();
+}
+
+class Delta {
+	constructor(apply, undo) {
+		this.apply = apply;
+		this.undo = undo;
+	}
+}
+class SetDelta {
+	constructor(obj, property, newvalue) {
+		this.obj = obj;
+		this.property = property;
+		this.newvalue = newvalue;
+		this.oldvalue = obj[property]
+
+	}
+	undoes(other) {
+		if(other instanceof SetDelta) {
+			return this.obj == other.obj &&
+				this.property == other.property &&
+				this.newvalue == other.oldvalue &&
+				this.oldvalue == other.newvalue;
+		}
+		return false;
+	}
+
+	apply() {
+		this.obj[this.property] = this.newvalue;
+		this.obj.__edited = true;
+	}
+	undo() { 
+		this.obj[this.property] = this.oldvalue;
+		this.obj.__edited = true;
+	}
+}
+
+class JoinedDelta {
+	constructor() {
+		this.deltas = [];
+	}
+	add(delta) {
+		this.deltas.push(delta);
+	}
+	apply() {
+		for(let d of this.deltas) {
+			d.apply();
+		}
+	}
+	undo() {
+		for(let d of this.deltas) {
+			d.undo();
+		}
+	}
 }

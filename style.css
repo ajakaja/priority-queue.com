@@ -496,6 +496,7 @@ div.urgent, div.add {
 	background: #d77;
 	opacity: 1.0;
 	color: #ccc;
+	top: 5px;
 }
 .hint {
 	height: 2em;

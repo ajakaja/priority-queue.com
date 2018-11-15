@@ -1,11 +1,14 @@
-"use strict";
+const parser = require("./parser.js");
+const Cookies = require("cookies-js");
+const Dropbox = require("dropbox");
 
-function initializeDropbox() {
+module.exports = function() {
+
 	const CLIENT_ID = "oh0zj30oa52f1y3";
 	const TOKEN_COOKIE = "dropbox-token";
 
 	function getToken() {
-		if(token != null) {
+		if(token !== null) {
 			return token;
 		}
 		let cookie = Cookies.get(TOKEN_COOKIE);
@@ -23,7 +26,7 @@ function initializeDropbox() {
 	}
 
 	function isAuthenticated() {
-		if(token != null) {
+		if(token !== null) {
 			return true;
 		}
 		return !!getToken();
@@ -36,7 +39,7 @@ function initializeDropbox() {
 	if(isAuthenticated()) {
 		token = getToken();
 		authenticated = true;
-		dbx = new Dropbox.Dropbox({ accessToken: token });
+		dbx = new Dropbox({ accessToken: token });
 	}
 
 	function toISOwithoutMillis(date) {
@@ -54,8 +57,7 @@ function initializeDropbox() {
 			} else {
 				redirectUrl = URL;
 			}
-			return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}`
-				+ `&response_type=token&redirect_uri=${redirectUrl}`;
+			return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}` + `&response_type=token&redirect_uri=${redirectUrl}`;
 		},
 		async logout() {
 			Cookies.expire(TOKEN_COOKIE);
@@ -85,7 +87,7 @@ function initializeDropbox() {
 			let response = await dbx.filesUpload({path: "/" + data.filename, 
 					contents: text, 
 					mode: "overwrite"});
-			view.setHint("saved");
+			return "saved to Dropbox!";
 		},
 		async delete(filename) {
 			console.log(`Deleting file: '${filename}'.`);
