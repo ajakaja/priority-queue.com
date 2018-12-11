@@ -1,4 +1,3 @@
-const URL = "https://priority-queue.com";
 const INCOMPLETE = "incomplete";
 const COMPLETE = "complete";
 const DELETED = "deleted";

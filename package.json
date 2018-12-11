@@ -5,9 +5,8 @@
   "main": "src/pq.js",
   "dependencies": {
     "cookies-js": "^1.2.3",
-    "dropbox": "^2.5.12",
+    "dropbox": "^4.0.14",
     "jquery-slim": "^3.0.0",
-    "npm": "^6.4.1",
     "strictify": "^0.2.0"
   },
   "license": "UNLICENSED",

@@ -1,6 +1,7 @@
 const parser = require("./parser.js");
 const Cookies = require("cookies-js");
-const Dropbox = require("dropbox");
+const Dropbox = require("dropbox").Dropbox;
+const URL = "https://priority-queue.com";
 
 module.exports = function() {
 
@@ -39,7 +40,7 @@ module.exports = function() {
 	if(isAuthenticated()) {
 		token = getToken();
 		authenticated = true;
-		dbx = new Dropbox({ accessToken: token });
+		dbx = new Dropbox({ accessToken: token, fetch: fetch});
 	}
 
 	function toISOwithoutMillis(date) {
