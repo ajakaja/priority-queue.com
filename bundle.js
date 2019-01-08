@@ -9314,20 +9314,21 @@ module.exports = function(pq) {
 		if(e.button !== 0) {
 			return;
 		}
-		if($target.is("div.edit")) {
+		if($target.closest("div.edit").length) {
 			setAsEditing($this);
 			return false;
 		}
-		if($target.is("div.check")) {
+		if($target.closest("div.check").length) {
 			let data = $this.data("item");
 			setStatus($this, toggle(data.status));
 			return false;
 		}
-		if($target.is("div.close")) {
+		// Changed to 'closest' because the Div contains an <svg> tag, which is the actual recipient of the event.
+		if($target.closest("div.close").length) {
 			remove($this);
 			return false;
 		}
-		if($target.is("div.add")) {
+		if($target.closest("div.add").length) {
 			let priority = getPriority($this);
 			let $next = $this.next();
 			addItem(priority+0.5, $next);
