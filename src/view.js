@@ -170,7 +170,7 @@ module.exports = function(pq) {
 	}
 
 	function setupTitleBar() {
-		$save.click(save);
+		$save.click(pq.saveFile);
 		$newfile.keydown(e => {
 			if(e.which == ENTER) {
 				let validname = validFilename($newfile.text());
@@ -389,6 +389,7 @@ module.exports = function(pq) {
 		$lis.each((i, li) => {
 			let $li = $(li);
 			let item = $li.data("item");
+			// __edited is an optimization, so we only check things that have changed. Hence the weird sidechannel.
 			if(item.__edited) {
 				$li.find("div.text").html(item.text);
 				changedPriority = (getPriorityText($li) != priorityText(item.priority));
@@ -405,7 +406,6 @@ module.exports = function(pq) {
 			.filter((i, e) => statuses.includes(getStatus($(e))))
 			.insertBefore($addButton);
 	}
-	
 
 	function createPQItem(item) {
 		const $clone = $(document.importNode(rowtemplate.content, true));
@@ -622,7 +622,7 @@ module.exports = function(pq) {
 	}
 
 	function resetPriorities() {
-		startSequence();
+		pq.startSequence();
 		$("li.pqitem").each((i, e) => {
 			let $e = $(e);
 			if(getPriority($e) != i+1) {
@@ -630,7 +630,7 @@ module.exports = function(pq) {
 				highlight($e);
 			}
 		});
-		endSequence();
+		pq.endSequence();
 	}
 
 	function setupHotkeys() {
@@ -876,9 +876,14 @@ module.exports = function(pq) {
 		return $li.find("div.text").html();
 	}
 	function remove($li) {
-		let item = $li.data("item");
-		pq.set(item, "status", Types.DELETED);
-		$li.detach();
+		highlight($li);
+		// I think it feels better if there's a slight pause before deleting.
+		window.setTimeout(() => {
+			let item = $li.data("item");
+			pq.set(item, "status", Types.DELETED);
+			$li.detach();
+			resetPriorities();
+		}, 300);
 	}
 	function setHint(text, repeat=true) {
 		if(repeat || !hints[text]) {
@@ -932,6 +937,7 @@ module.exports = function(pq) {
 		},
 		setEdited(edited) {
 			if(edited) {
+				setHint("unsaved! will save in a sec if you don't do anything.", false);
 				$save.addClass("edited");
 			} else {
 				$save.removeClass("edited");

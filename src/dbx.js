@@ -20,7 +20,7 @@ module.exports = function() {
 		let params = new URLSearchParams(window.location.hash.slice(1));
 		let ret = params.get("access_token");
 		if(!!ret) {
-			Cookies.set(TOKEN_COOKIE, ret, { expires: 60*60*24*30 });
+			Cookies.set(TOKEN_COOKIE, ret);
 			window.history.replaceState({}, document.title, window.location.origin);
 		}
 		return ret;
@@ -58,7 +58,7 @@ module.exports = function() {
 			} else {
 				redirectUrl = URL;
 			}
-			return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}` + `&response_type=token&redirect_uri=${redirectUrl}`;
+			return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${redirectUrl}`;
 		},
 		async logout() {
 			Cookies.expire(TOKEN_COOKIE);
